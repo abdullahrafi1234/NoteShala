@@ -61,7 +61,7 @@ Before writing code, ask yourself:
 1. What problem am I actually solving?
 2. What are the edge cases?
 3. Is there a simpler solution?
-`
+`,
       },
       {
         id: "problem-decomposition",
@@ -90,16 +90,16 @@ Let's decompose a simple todo application:
 interface TodoApp {
   // 1. Data structure
   todos: Todo[];
-  
+
   // 2. Add functionality
   addTodo: (text: string) => void;
-  
+
   // 3. Remove functionality
   removeTodo: (id: string) => void;
-  
+
   // 4. Toggle complete
   toggleComplete: (id: string) => void;
-  
+
   // 5. Filter todos
   filterTodos: (status: 'all' | 'active' | 'completed') => Todo[];
 }
@@ -118,7 +118,7 @@ Try decomposing these problems:
 - A user authentication system
 - A shopping cart feature
 - A real-time chat application
-`
+`,
       },
       {
         id: "data-structures",
@@ -149,11 +149,11 @@ Components that maintain and modify internal state:
 // Stateful - maintains internal state
 class Counter {
   private count: number = 0;
-  
+
   increment(): number {
     return ++this.count;
   }
-  
+
   getCount(): number {
     return this.count;
   }
@@ -169,23 +169,23 @@ console.log(counter.increment()); // 2
 \`\`\`typescript
 class DataStructure<T> {
   protected items: T[] = [];
-  
+
   add(item: T): void {
     this.items.push(item);
   }
-  
+
   remove(): T | undefined {
     return this.items.pop();
   }
-  
+
   peek(): T | undefined {
     return this.items[this.items.length - 1];
   }
-  
+
   get size(): number {
     return this.items.length;
   }
-  
+
   isEmpty(): boolean {
     return this.items.length === 0;
   }
@@ -209,9 +209,9 @@ class DataStructure<T> {
 - **Maps**: When you need fast key-based lookup
 - **Stacks**: Undo operations, parsing, recursion
 - **Queues**: Task scheduling, BFS algorithms
-`
-      }
-    ]
+`,
+      },
+    ],
   },
   {
     id: "mission-2",
@@ -282,7 +282,7 @@ const multiply = (a: number, b: number) => a * b;
 const status = "success"; // Type: "success" (literal)
 let status2 = "success";  // Type: string
 \`\`\`
-`
+`,
       },
       {
         id: "interfaces-types",
@@ -352,9 +352,9 @@ type Person = Named & Aged;
 | Union/Intersection | ❌ No | ✅ Yes |
 
 **Rule of thumb**: Use interfaces for object shapes, types for everything else.
-`
-      }
-    ]
+`,
+      },
+    ],
   },
   {
     id: "mission-3",
@@ -433,7 +433,7 @@ try {
   console.log('File does not exist');
 }
 \`\`\`
-`
+`,
       },
       {
         id: "express-basics",
@@ -482,11 +482,11 @@ app.listen(3000, () => {
 // Authentication middleware
 const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
-  
+
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
@@ -522,9 +522,9 @@ export default router;
 import userRoutes from './routes/users';
 app.use('/api/users', userRoutes);
 \`\`\`
-`
-      }
-    ]
+`,
+      },
+    ],
   },
   {
     id: "mission-4",
@@ -553,7 +553,7 @@ CREATE TABLE users (
 );
 
 -- Insert data
-INSERT INTO users (name, email) 
+INSERT INTO users (name, email)
 VALUES ('John Doe', 'john@example.com');
 
 -- Query data
@@ -592,7 +592,7 @@ CREATE UNIQUE INDEX idx_users_email_unique ON users(email);
 -- Composite index
 CREATE INDEX idx_orders_user_date ON orders(user_id, created_at);
 \`\`\`
-`
+`,
       },
       {
         id: "prisma-orm",
@@ -674,34 +674,35 @@ await prisma.user.delete({ where: { id: 1 } });
 \`\`\`typescript
 const result = await prisma.$transaction(async (tx) => {
   const user = await tx.user.create({ data: { email: 'new@example.com' } });
-  const post = await tx.post.create({ 
-    data: { title: 'First Post', authorId: user.id } 
+  const post = await tx.post.create({
+    data: { title: 'First Post', authorId: user.id }
   });
   return { user, post };
 });
 \`\`\`
-`
-      }
-    ]
-  }
+`,
+      },
+    ],
+  },
 ];
 
 export const getAllSections = (): DocSection[] => {
-  return docsData.flatMap(category => category.sections);
+  return docsData.flatMap((category) => category.sections);
 };
 
 export const getSectionById = (id: string): DocSection | undefined => {
-  return getAllSections().find(section => section.id === id);
+  return getAllSections().find((section) => section.id === id);
 };
 
 export const getCategoryById = (id: string): DocCategory | undefined => {
-  return docsData.find(category => category.id === id);
+  return docsData.find((category) => category.id === id);
 };
 
 export const searchDocs = (query: string): DocSection[] => {
   const lowerQuery = query.toLowerCase();
-  return getAllSections().filter(section => 
-    section.title.toLowerCase().includes(lowerQuery) ||
-    section.content.toLowerCase().includes(lowerQuery)
+  return getAllSections().filter(
+    (section) =>
+      section.title.toLowerCase().includes(lowerQuery) ||
+      section.content.toLowerCase().includes(lowerQuery)
   );
 };
