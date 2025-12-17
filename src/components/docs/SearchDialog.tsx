@@ -1,13 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, FileText, ArrowRight } from "lucide-react";
-import Fuse from "fuse.js";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { getAllSections, DocSection } from "@/data/docsContent";
+import { DocSection, getAllSections } from "@/data/docsData";
+import Fuse from "fuse.js";
+import { ArrowRight, FileText, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SearchDialogProps {
   open: boolean;
@@ -17,18 +14,22 @@ interface SearchDialogProps {
 export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  
+
   const sections = useMemo(() => getAllSections(), []);
-  
-  const fuse = useMemo(() => new Fuse(sections, {
-    keys: [
-      { name: "title", weight: 0.7 },
-      { name: "content", weight: 0.3 },
-    ],
-    threshold: 0.4,
-    includeMatches: true,
-    minMatchCharLength: 2,
-  }), [sections]);
+
+  const fuse = useMemo(
+    () =>
+      new Fuse(sections, {
+        keys: [
+          { name: "title", weight: 0.7 },
+          { name: "content", weight: 0.3 },
+        ],
+        threshold: 0.4,
+        includeMatches: true,
+        minMatchCharLength: 2,
+      }),
+    [sections]
+  );
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
@@ -62,7 +63,7 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
       .replace(/\*\*([^*]+)\*\*/g, "$1")
       .replace(/\n+/g, " ")
       .trim();
-    
+
     if (plainText.length <= maxLength) return plainText;
     return plainText.substring(0, maxLength).trim() + "...";
   };
@@ -120,11 +121,15 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
         <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30 text-xs text-muted-foreground">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">↵</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">
+                ↵
+              </kbd>
               to select
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">esc</kbd>
+              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">
+                esc
+              </kbd>
               to close
             </span>
           </div>

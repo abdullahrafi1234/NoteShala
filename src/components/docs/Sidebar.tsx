@@ -1,19 +1,20 @@
+// import { docsData } from "@/data/docsData";
+import { docsData } from "@/components/docs/loader"; // তোমার path
+import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { docsData } from "@/data/docsContent";
-import { cn } from "@/lib/utils";
 
 export const Sidebar = () => {
   const { sectionId } = useParams();
   const [expandedCategories, setExpandedCategories] = useState<string[]>(
-    docsData.map(cat => cat.id)
+    docsData.map((cat) => cat.id)
   );
 
   const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev =>
+    setExpandedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
+        ? prev.filter((id) => id !== categoryId)
         : [...prev, categoryId]
     );
   };
@@ -22,8 +23,8 @@ export const Sidebar = () => {
     <aside className="w-72 shrink-0 border-r border-border bg-sidebar h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden lg:block">
       <nav className="p-4 space-y-2">
         {docsData.map((category, catIndex) => (
-          <div 
-            key={category.id} 
+          <div
+            key={category.id}
             className="animate-slide-in-left"
             style={{ animationDelay: `${catIndex * 50}ms` }}
           >

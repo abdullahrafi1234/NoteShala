@@ -1,24 +1,40 @@
-import { getSectionById } from "@/lib/docsLoader";
-import Markdown from "react-markdown";
+import { getAllSections, getSectionById } from "@/./data/docsData"; // বা তোমার path
+import { loadMarkdownContent } from "@/utils/loadMarkdown";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
-type Props = {
-  sectionId: string | null;
-};
+export const DocContent = () => {
+  const { sectionId } = useParams<{ sectionId: string }>();
+  const allSections = getAllSections();
+  const section = sectionId ? getSectionById(sectionId) : allSections[0];
 
-export default function DocsViewer({ sectionId }: Props) {
-  if (!sectionId) {
-    return <p className="p-6">Select a module</p>;
-  }
+  const [content, setContent] = useState<string>("Loading...");
 
-  const section = getSectionById(sectionId);
+  const currentIndex = section
+    ? allSections.findIndex((s) => s.id === section.id)
+    : 0;
 
-  if (!section) {
-    return <p className="p-6">Section not found</p>;
-  }
+  const prevSection = currentIndex > 0 ? allSections[currentIndex - 1] : null;
+  const nextSection =
+    currentIndex < allSections.length - 1
+      ? allSections[currentIndex + 1]
+      : null;
+
+  useEffect(() => {
+    if (section && section.markdownPath) {
+      loadMarkdownContent(section.markdownPath).then(setContent);
+    }
+  }, [section?.id]);
+
+  // ... বাকি code same (not found, navigation)
 
   return (
-    <article className="prose max-w-none p-6">
-      <Markdown>{section.content}</Markdown>
-    </article>
+    <div className="flex-1 min-w-0 animate-fade-in">
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        <MarkdownRenderer content={content} />
+        {/* Navigation same as তোমার code */}
+      </div>
+    </div>
   );
-}
+};

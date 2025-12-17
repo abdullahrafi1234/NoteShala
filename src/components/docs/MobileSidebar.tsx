@@ -1,8 +1,3 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ChevronDown, ChevronRight, Menu } from "lucide-react";
-import { docsData } from "@/data/docsContent";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,18 +6,23 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { docsData } from "@/data/docsData";
+import { cn } from "@/lib/utils";
+import { ChevronDown, ChevronRight, Menu } from "lucide-react";
+import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 export const MobileSidebar = () => {
   const { sectionId } = useParams();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(
-    docsData.map(cat => cat.id)
+    docsData.map((cat) => cat.id)
   );
 
   const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev =>
+    setExpandedCategories((prev) =>
       prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
+        ? prev.filter((id) => id !== categoryId)
         : [...prev, categoryId]
     );
   };
