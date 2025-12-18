@@ -2,71 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @layer base {
   :root {
-    --background: 250 20% 4%;
-    --foreground: 250 10% 95%;
+    /* Core colors - Deep navy black background with cyan/teal accents */
+    --background: 210 25% 4%; /* Very dark navy-black */
+    --foreground: 210 15% 98%; /* Near white for text */
 
-    --card: 250 20% 8%;
-    --card-foreground: 250 10% 95%;
+    --card: 210 25% 8%;
+    --card-foreground: 210 15% 98%;
 
-    --popover: 250 20% 8%;
-    --popover-foreground: 250 10% 95%;
+    --popover: 210 25% 8%;
+    --popover-foreground: 210 15% 98%;
 
-    --primary: 270 80% 65%;
-    --primary-foreground: 250 20% 4%;
+    --primary: 190 95% 50%; /* Main cyan/teal accent (#00e0ff like) */
+    --primary-foreground: 210 25% 8%; /* Dark text on primary buttons */
 
-    --secondary: 250 20% 12%;
-    --secondary-foreground: 250 10% 90%;
+    --secondary: 210 20% 14%;
+    --secondary-foreground: 210 15% 90%;
 
-    --muted: 250 15% 15%;
-    --muted-foreground: 250 10% 60%;
+    --muted: 210 20% 18%;
+    --muted-foreground: 210 10% 65%;
 
-    --accent: 280 70% 60%;
-    --accent-foreground: 250 10% 95%;
+    --accent: 190 90% 60%; /* Lighter cyan for hover/accent */
+    --accent-foreground: 210 20% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 250 15% 18%;
-    --input: 250 15% 18%;
-    --ring: 270 80% 65%;
+    --border: 210 20% 20%;
+    --input: 210 20% 20%;
+    --ring: 190 95% 50%; /* Cyan focus ring */
 
     --radius: 0.75rem;
 
-    /* Custom tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(270 80% 65%) 0%, hsl(290 80% 55%) 50%, hsl(320 70% 50%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(250 20% 6%) 0%, hsl(250 20% 4%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(250 20% 10%) 0%, hsl(250 20% 8%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(270 80% 65% / 0.15) 0%, transparent 70%);
-    
-    --shadow-glow: 0 0 60px hsl(270 80% 65% / 0.3);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
-    --shadow-elevated: 0 8px 32px hsl(0 0% 0% / 0.5);
+    /* Custom gradients & shadows - matching your NS logo vibe */
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(200 100% 35%) 0%,
+      hsl(190 100% 50%) 50%,
+      hsl(180 100% 65%) 100%
+    );
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(210 25% 6%) 0%,
+      hsl(210 25% 4%) 100%
+    );
+    --gradient-card: linear-gradient(
+      135deg,
+      hsl(210 25% 10%) 0%,
+      hsl(210 25% 8%) 100%
+    );
+    --gradient-glow: radial-gradient(
+      ellipse at center,
+      hsl(190 95% 50% / 0.25) 0%,
+      transparent 70%
+    );
 
-    --sidebar-background: 250 20% 6%;
-    --sidebar-foreground: 250 10% 80%;
-    --sidebar-primary: 270 80% 65%;
-    --sidebar-primary-foreground: 250 20% 4%;
-    --sidebar-accent: 250 20% 12%;
-    --sidebar-accent-foreground: 250 10% 95%;
-    --sidebar-border: 250 15% 15%;
-    --sidebar-ring: 270 80% 65%;
+    --shadow-glow: 0 0 60px hsl(190 95% 50% / 0.4);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.5);
+    --shadow-elevated: 0 8px 32px hsl(0 0% 0% / 0.6);
 
-    /* Code block colors */
-    --code-bg: 250 25% 10%;
-    --code-border: 250 15% 18%;
-    --code-keyword: 270 80% 70%;
-    --code-string: 150 60% 55%;
-    --code-number: 35 90% 60%;
-    --code-comment: 250 10% 45%;
-    --code-function: 200 80% 65%;
+    /* Sidebar specific */
+    --sidebar-background: 210 25% 6%;
+    --sidebar-foreground: 210 15% 85%;
+    --sidebar-primary: 190 95% 50%;
+    --sidebar-primary-foreground: 210 25% 8%;
+    --sidebar-accent: 210 20% 14%;
+    --sidebar-accent-foreground: 210 15% 98%;
+    --sidebar-border: 210 20% 20%;
+    --sidebar-ring: 190 95% 50%;
+
+    /* Code block colors - vibrant cyan theme */
+    --code-bg: 210 30% 10%;
+    --code-border: 210 20% 22%;
+    --code-keyword: 190 95% 70%; /* Bright cyan keywords */
+    --code-string: 150 70% 60%; /* Teal-green strings */
+    --code-number: 30 90% 65%; /* Orange numbers */
+    --code-comment: 210 15% 55%; /* Muted gray comments */
+    --code-function: 190 95% 75%; /* Brighter cyan functions */
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -77,11 +94,12 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   }
 
-  code, pre {
-    font-family: 'JetBrains Mono', monospace;
+  code,
+  pre {
+    font-family: "JetBrains Mono", monospace;
   }
 
   /* Custom scrollbar */
@@ -99,7 +117,7 @@
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
+    @apply bg-muted-foreground/40;
   }
 }
 
@@ -128,7 +146,7 @@
   }
 
   .prose-docs h1 {
-    @apply text-3xl font-bold text-foreground mb-6 mt-8;
+    @apply text-3xl font-bold text-foreground mb-6 mt-8 gradient-text;
   }
 
   .prose-docs h2 {
@@ -143,7 +161,8 @@
     @apply mb-4 text-foreground/80;
   }
 
-  .prose-docs ul, .prose-docs ol {
+  .prose-docs ul,
+  .prose-docs ol {
     @apply mb-4 pl-6 space-y-2;
   }
 
@@ -179,7 +198,8 @@
     @apply w-full border-collapse mb-4;
   }
 
-  .prose-docs th, .prose-docs td {
+  .prose-docs th,
+  .prose-docs td {
     @apply border border-border px-4 py-2 text-left;
   }
 
@@ -188,11 +208,11 @@
   }
 
   .sidebar-item {
-    @apply px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer;
+    @apply px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all duration-200 cursor-pointer;
   }
 
   .sidebar-item-active {
-    @apply bg-primary/10 text-primary border-l-2 border-primary;
+    @apply bg-primary/15 text-primary border-l-4 border-primary font-medium;
   }
 
   .sidebar-category {
@@ -217,19 +237,39 @@
     animation: scaleIn 0.3s ease-out forwards;
   }
 
-  .animation-delay-100 { animation-delay: 100ms; }
-  .animation-delay-200 { animation-delay: 200ms; }
-  .animation-delay-300 { animation-delay: 300ms; }
-  .animation-delay-400 { animation-delay: 400ms; }
-  .animation-delay-500 { animation-delay: 500ms; }
-  .animation-delay-600 { animation-delay: 600ms; }
-  .animation-delay-700 { animation-delay: 700ms; }
-  .animation-delay-800 { animation-delay: 800ms; }
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+  .animation-delay-700 {
+    animation-delay: 700ms;
+  }
+  .animation-delay-800 {
+    animation-delay: 800ms;
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {

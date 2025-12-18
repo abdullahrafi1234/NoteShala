@@ -22,6 +22,7 @@ export const Navbar = () => {
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
             >
               <BookOpen className="h-6 w-6 text-primary" />
+              {/* <img className="w-20" src="/public/logo.png" alt="" /> */}
               <span className="font-bold text-2xl hidden sm:inline">
                 NoteShala
               </span>
