@@ -1,5 +1,5 @@
 import type { DocSection } from "@/components/docs/interfaces";
-import { getAllSections } from "@/components/docs/loader"; // dynamic data!
+import { getAllSections } from "@/components/docs/loader";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Fuse, { FuseResult } from "fuse.js";
@@ -15,23 +15,62 @@ interface SearchDialogProps {
 export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
-
   const sections = useMemo(() => getAllSections(), []);
 
+  // আপনার রিকোয়েস্ট অনুযায়ী শুধু #, ##, ### এবং ** ফিল্টার করার ফাংশন
+  const extractSpecificText = (content: string) => {
+    if (!content) return "";
+
+    // ১. হেডিং ম্যাচ: #, ##, ###
+    const headingRegex = /^#{1,3}\s+(.+)$/gm;
+    // ২. বোল্ড টেক্সট ম্যাচ: **text**
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    // ৩. কোলন যুক্ত কি-ওয়ার্ড ম্যাচ (যেমন: Frameworks:)
+    const keywordRegex = /^([A-Z][\w\s]+:)$/gm;
+
+    const matchedParts: string[] = [];
+    let match;
+
+    // হেডিং সংগ্রহ
+    while ((match = headingRegex.exec(content)) !== null) {
+      matchedParts.push(match[1].trim());
+    }
+
+    // বোল্ড টেক্সট সংগ্রহ
+    while ((match = boldRegex.exec(content)) !== null) {
+      matchedParts.push(match[1].trim());
+    }
+
+    // কোলন যুক্ত কি-ওয়ার্ড সংগ্রহ (যেমন: Frameworks:)
+    while ((match = keywordRegex.exec(content)) !== null) {
+      matchedParts.push(match[1].replace(":", "").trim());
+    }
+
+    return matchedParts.join(" ");
+  };
+
+  // ডাটাবেজ প্রসেসিং
+  const processedData = useMemo(() => {
+    return sections.map((section) => ({
+      ...section,
+      // এই ফিল্ডে শুধু আপনার চাওয়া টেক্সটগুলো থাকবে
+      onlySpecifics: extractSpecificText(section.content),
+    }));
+  }, [sections]);
+
+  // Fuse.js কনফিগারেশন
   const fuse = useMemo(
     () =>
-      new Fuse(sections, {
+      new Fuse(processedData, {
         keys: [
-          { name: "content", weight: 0.8 }, // content-এর উপর বেশি focus
-          { name: "title", weight: 0.2 }, // title কম weight
+          { name: "title", weight: 0.3 }, // ফাইলের নাম
+          { name: "onlySpecifics", weight: 0.7 }, // আপনার স্পেসিফিক হেডিং ও বোল্ড লেখা
         ],
-        threshold: 0.35,
-        includeScore: true,
-        includeMatches: true,
+        threshold: 0.3,
         minMatchCharLength: 2,
         shouldSort: true,
       }),
-    [sections]
+    [processedData]
   );
 
   const results = useMemo(() => {
@@ -39,7 +78,6 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     return fuse.search(query).slice(0, 8);
   }, [query, fuse]);
 
-  // Ctrl+K / Cmd+K shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -57,115 +95,58 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     setQuery("");
   };
 
-  // Snippet with bold highlight for matched words
-  const getSnippet = (
-    content: string,
-    matches: Fuse.FuseResultMatch[] = [],
-    maxLength = 140
-  ): string => {
-    let highlighted = content;
-
-    if (matches.length > 0) {
-      // Only highlight matches in content
-      const contentMatches = matches.filter((m) => m.key === "content");
-      const indices = contentMatches.flatMap((m) => m.indices);
-
-      // Sort indices reverse to avoid offset issues
-      indices.sort((a, b) => b[0] - a[0]);
-
-      indices.forEach(([start, end]) => {
-        const matched = content.substring(start, end + 1);
-        highlighted =
-          highlighted.slice(0, start) +
-          `**${matched}**` +
-          highlighted.slice(end + 1);
-      });
-    }
-
-    // Clean markdown for plain text snippet
-    const plain = highlighted
-      .replace(/```[\s\S]*?```/g, " ")
-      .replace(/`[^`]+`/g, "")
-      .replace(/#{1,6}\s/g, "")
-      .replace(/\*\*/g, "") // remove bold markers after highlight
-      .replace(/\n+/g, " ")
-      .trim();
-
-    return plain.length > maxLength
-      ? plain.substring(0, maxLength) + "..."
-      : plain;
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden h-full max-h-screen sm:max-h-[80vh] sm:rounded-lg">
-        <div className="flex items-center border-b border-border px-4">
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden sm:rounded-xl bg-background border shadow-2xl">
+        <div className="flex items-center border-b px-4 py-3">
           <Search className="h-5 w-5 text-muted-foreground shrink-0" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search in documentation content..."
-            className="border-0 focus-visible:ring-0 text-lg py-6"
+            placeholder="Search headings and key terms..."
+            className="border-0 focus-visible:ring-0 text-lg shadow-none"
             autoFocus
           />
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto sm:max-h-[65vh]">
+        <div className="max-h-[65vh] overflow-y-auto p-2">
           {query.trim() === "" ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Start typing to search in module contents</p>
+            <div className="p-12 text-center text-muted-foreground opacity-50">
+              <p>Search specifically in Headings and Bold terms</p>
             </div>
           ) : results.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
-              <p>No results found for "{query}"</p>
+            <div className="p-12 text-center text-muted-foreground">
+              No results for "{query}"
             </div>
           ) : (
-            <div className="p-2">
-              {results.map((fuseResult: FuseResult<DocSection>) => {
-                const { item, matches = [] } = fuseResult;
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSelect(item)}
-                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left group"
-                  >
-                    <FileText className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-foreground group-hover:text-primary transition-colors">
-                          {item.title}
-                        </span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {getSnippet(item.content, matches)}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="space-y-1">
+              {results.map((res: FuseResult<DocSection>) => (
+                <button
+                  key={res.item.id}
+                  onClick={() => handleSelect(res.item)}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-muted transition-all text-left group"
+                >
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <p className="font-bold text-foreground truncate">
+                      {res.item.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate opacity-70">
+                      In: {res.item.id}
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ))}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/30 text-xs text-muted-foreground">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">
-                ↵
-              </kbd>
-              to select
-            </span>
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border">
-                esc
-              </kbd>
-              to close
-            </span>
-          </div>
-          <span>Search powered by content</span>
+        <div className="px-4 py-2 border-t bg-muted/50 text-[10px] text-muted-foreground flex gap-3 uppercase font-bold">
+          <span>Enter to select</span>
+          <span>Esc to close</span>
         </div>
       </DialogContent>
     </Dialog>
