@@ -1,4 +1,4 @@
-# Module 5 Explore The Basic Types Of Typescript
+# Module 5: Explore The Basic Types Of Typescript
 
 ---
 
