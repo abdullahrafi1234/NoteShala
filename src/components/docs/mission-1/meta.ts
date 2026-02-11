@@ -12,7 +12,6 @@ export const category: DocCategory = {
       order: 1,
       markdownFile: "module-1.md",
       categoryId: "mission-1",
-      content: "Module nai",
     },
     {
       id: "js-data-transform",
@@ -28,6 +27,5 @@ export const category: DocCategory = {
       markdownFile: "module-3.md",
       categoryId: "mission-1",
     },
-    // অন্য গুলো
   ],
 };

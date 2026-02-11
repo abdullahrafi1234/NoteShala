@@ -13,13 +13,12 @@ export const category: DocCategory = {
       markdownFile: "module-9.md",
       categoryId: "mission-3",
     },
-    // {
-    //   id: "2",
-    //   title: "Module 6: Explore Advance Types of Typescript",
-    //   order: 1,
-    //   markdownFile: "module-2.md",
-    //   categoryId: "mission-2",
-    // },
-    // অন্য গুলো
+    {
+      id: "Raw-Node.js-Basic-to-Advanced",
+      title: "Raw Node.js Basic to Advanced",
+      order: 1,
+      markdownFile: "raw-node-js.md",
+      categoryId: "mission-3",
+    },
   ],
 };
