@@ -111,7 +111,7 @@ This document covers the essential internal workings of Node.js modules, includi
 `__dirname` provides the absolute path of the directory that contains the current JavaScript file. It does not include the filename.
 
 ```js
-console.log("ফোল্ডার পাথ: ", __dirname);
+console.log("folder path: ", __dirname);
 ```
 
 - **Example:** If your file is at `/users/project/app.js`, `__dirname` will be `/users/project`.
@@ -124,7 +124,7 @@ console.log("ফোল্ডার পাথ: ", __dirname);
 `__filename` provides the **absolute path** of the current JavaScript file, including the filename and its extension.
 
 ```js
-console.log("ফাইল পাথ: ", __filename);
+console.log("file path: ", __filename);
 ```
 
 - **Example:** `/users/project/app.js`.
@@ -171,4 +171,52 @@ Every time Node.js executes a file, it wraps the code inside a hidden function b
 1. **Scoping:** It keeps top-level variables (declared with `var`, `let` or `const`) local to the module rather than the global object. This prevents variable name conflicts between files.
 2. **Dependency Injection:** It provides the module-specific variables (`require`, `module`, etc.) that are necessary for the module system to function.
 
-## 5- Node.js Server & Core Modules
+## 5-Node.js Server & Core Modules
+
+### Path Module
+
+The `node:path` module provides utilities for working with file and directory paths. It can be accessed using:
+
+1. The `path.basename()` method returns the last portion of a `path`, similar to the Unix `basename` command. It returns the very last part of a path (the file name). If you pass the extension as the second parameter, it will return just the file name.
+2. The `path.dirname()` method returns the directory name of a `path` . It returns the location of the entire directory or folder preceding a path, excluding the file name.
+3. The `path.extname()` method returns the extension of the `path`, from the last occurrence of the `.` (period) character to end of string in the last portion of the `path`.
+4. The `path.parse()` method returns an object whose properties represent significant elements of the `path`.
+
+```jsx
+const path = require('path');
+const myPath = 'D:/Next Level Development/NodeJS-Learn-With-Sumit/index.js';
+
+console.log(path.basename(myPath));
+// index.js
+console.log(path.dirname(myPath));
+// D:/Next Level Development/NodeJS-Learn-With-Sumit
+console.log(path.extname(myPath));
+// .js
+console.log(path.parse(myPath));
+// {
+  root: 'D:/',
+  dir: 'D:/Next Level Development/NodeJS-Learn-With-Sumit',
+  base: 'index.js',
+  ext: '.js',
+  name: 'index'
+// }
+```
+
+### OS Module
+
+The `node:os` module provides operating system-related utility methods and properties. It can be accessed using:
+
+1. **`os.freemem()`**Returns the amount of free system memory in bytes as an integer.
+2. **`os.cpus()`**Returns an array of objects containing information about each logical CPU core. The information includes model, speed (in MHz), and times.
+
+```jsx
+const os = require('os');
+console.log(os.freemem());
+// 6196547584
+console.log(os.cpus());
+// {
+    model: 'Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz',
+    speed: 2904,
+    times: { user: 3503406, nice: 0, sys: 119390, idle: 38171, irq: 21265 }
+ //  }, .......
+```
