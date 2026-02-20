@@ -181,10 +181,11 @@ The `node:path` module provides utilities for working with file and directory 
 2. The `path.dirname()` method returns the directory name of a `path` . It returns the location of the entire directory or folder preceding a path, excluding the file name.
 3. The `path.extname()` method returns the extension of the `path`, from the last occurrence of the `.` (period) character to end of string in the last portion of the `path`.
 4. The `path.parse()` method returns an object whose properties represent significant elements of the `path`.
+5. For more, visit [https://www.w3schools.com/nodejs/nodejs_path.asp](https://www.w3schools.com/nodejs/nodejs_path.asp)
 
 ```jsx
-const path = require('path');
-const myPath = 'D:/Next Level Development/NodeJS-Learn-With-Sumit/index.js';
+const path = require("path");
+const myPath = "D:/Next Level Development/NodeJS-Learn-With-Sumit/index.js";
 
 console.log(path.basename(myPath));
 // index.js
@@ -193,13 +194,13 @@ console.log(path.dirname(myPath));
 console.log(path.extname(myPath));
 // .js
 console.log(path.parse(myPath));
-// {
-  root: 'D:/',
-  dir: 'D:/Next Level Development/NodeJS-Learn-With-Sumit',
-  base: 'index.js',
-  ext: '.js',
-  name: 'index'
-// }
+//  {
+//   root: 'D:/',
+//   dir: 'D:/Next Level Development/NodeJS-Learn-With-Sumit',
+//   base: 'index.js',
+//   ext: '.js',
+//   name: 'index'
+//  }
 ```
 
 ### OS Module
@@ -208,15 +209,53 @@ The `node:os` module provides operating system-related utility methods and pro
 
 1. **`os.freemem()`**Returns the amount of free system memory in bytes as an integer.
 2. **`os.cpus()`**Returns an array of objects containing information about each logical CPU core. The information includes model, speed (in MHz), and times.
+3. for more, visit [https://www.w3schools.com/nodejs/nodejs_os.asp](https://www.w3schools.com/nodejs/nodejs_os.asp)
 
 ```jsx
-const os = require('os');
+const os = require("os");
 console.log(os.freemem());
 // 6196547584
 console.log(os.cpus());
 // {
-    model: 'Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz',
-    speed: 2904,
-    times: { user: 3503406, nice: 0, sys: 119390, idle: 38171, irq: 21265 }
- //  }, .......
+//  model: 'Intel(R) Core(TM) i7-10700 CPU @ 2.90GHz',
+//  speed: 2904,
+//  times: { user: 3503406, nice: 0, sys: 119390, idle: 38171, irq: 21265 }
+//  }, .......
+```
+
+### File System (fs) Module
+
+- **`require('fs')`**: To include the File System module, use the `require()` method.
+- **`writeFileSync()`**: This method creates a new file if it does not exist. If the file already exists, Node.js **replaces** the existing file and its content.
+- **`appendFileSync()`**: This method **appends** (adds) specified content to a file. If the file does not exist, it will be created.
+- **`readFileSync()`**: This method is used to read files on your computer. By default, it returns raw binary data called a **Buffer**.
+- **`toString()`**: Since the output is a Buffer (hexadecimal numbers), we use `.toString()` to convert that data into a human-readable string.
+
+```jsx
+const fs = require("fs");
+// Read file synchronously
+fs.writeFileSync("myFile.txt", "Hello Programmers");
+fs.appendFileSync("myFile.txt", " How are you");
+
+const data = fs.readFileSync("myFile.txt");
+//This method is used to read files on your computer. By default, it returns raw binary data called a **Buffer**.
+console.log(data);
+// <Buffer 48 65 6c 6c 6f 20 50 72 6f 67 72 61 6d 6d 65 72 73 20 48 6f 77 20 61 72 65 20 79 6f 75>
+
+console.log(data.toString());
+// Hello Programmers How are you
+```
+
+- In `Node.js`, Asynchronous means "don't wait." The fs.readFile() method is non-blocking.
+- যখন তুমি fs.readFile কল করলে, Node.js ফাইলটি পড়ার কাজ শুরু করে দিল কিন্তু সেটির জন্য অপেক্ষা না করে সাথে সাথে নিচের লাইনে চলে গেল এবং console.log('hello') প্রিন্ট করে দিল।
+- Callback: ফাইলের পড়া শেষ হলে Node.js মনে করিয়ে দেয়, "হে! আমার পড়া শেষ, এখন এই ফাংশনটি চালাও।" তখন (err, data) ফাংশনটি রান হয় এবং ফাইলের লেখা স্ক্রিনে দেখায়।
+
+```jsx
+// Read file asynchronously with callback
+fs.readFile("myFile.txt", (err, data) => {
+  console.log(data.toString());
+});
+console.log("hello");
+// hello
+// Hello Programmers How are you
 ```
