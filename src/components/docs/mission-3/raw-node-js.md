@@ -230,6 +230,7 @@ console.log(os.cpus());
 - **`appendFileSync()`**: This method **appends** (adds) specified content to a file. If the file does not exist, it will be created.
 - **`readFileSync()`**: This method is used to read files on your computer. By default, it returns raw binary data called a **Buffer**.
 - **`toString()`**: Since the output is a Buffer (hexadecimal numbers), we use `.toString()` to convert that data into a human-readable string.
+- For more, Visit [ https://www.w3schools.com/nodejs/nodejs_filesystem.asp](https://www.w3schools.com/nodejs/nodejs_filesystem.asp)
 
 ```jsx
 const fs = require("fs");
@@ -258,4 +259,104 @@ fs.readFile("myFile.txt", (err, data) => {
 console.log("hello");
 // hello
 // Hello Programmers How are you
+```
+
+### Event Module
+
+- **`EventEmitter` Class:** To use events, you must require the `events` module. All event properties and methods are an instance of the `EventEmitter` object.
+- **Registering a Listener (`on` method):** This is like setting an alarm. You are telling Node.js, "When the 'bellRing' event happens, execute this function."
+- **Multiple Listeners:** You can register multiple listeners for the same event. They will be executed in the order they were registered.
+- **Raising an Event (`emit` method):** This is the action that triggers the event. It's like actually pressing the doorbell.
+- **Passing Arguments:** You can pass data (strings, objects, etc.) through the `emit()` method, which the listener function receives as parameters.
+
+```tsx
+const EventEmitter = require("events");
+const emitter = new EventEmitter();
+
+// register a listener for bellRing
+emitter.on("bellRing", () => {
+  console.log("We need to run because ");
+});
+// raise an event
+emitter.emit("bellRing");
+
+// Another process When we need parameter and timer
+emitter.on("bellRing", (period) => {
+  console.log(`We need to run because ${period}`);
+});
+setTimeout(() => {
+  emitter.emit("bellRing", "second period ended");
+}, 2000);
+
+// Another Process When we need multiple parameter and timer
+emitter.on("bellRing", ({ period, text }) => {
+  console.log(`We need to run because ${period} ${text}`);
+});
+setTimeout(() => {
+  emitter.emit("bellRing", {
+    period: "first",
+    text: "period ended",
+  });
+}, 2000);
+```
+
+### Real Project
+
+- When we need to import data from another file to use the events module
+
+```tsx
+// In school.js file we require events
+const EventEmitter = require("events");
+
+class School extends EventEmitter {
+  startPeriod() {
+    console.log("Class Started");
+
+    // raise event when bell rings
+    // raise an event
+    setTimeout(() => {
+      this.emit("bellRing", {
+        period: "first",
+        text: "period ended",
+      });
+    }, 2000);
+  }
+}
+module.exports = School;
+
+// In index.js to use events(school.js er events ta)
+const School = require("./school");
+const school = new School();
+
+school.on("bellRing", ({ period, text }) => {
+  console.log(`We need to run because ${period} ${text}`);
+});
+school.startPeriod();
+// Output =>
+// Class Started
+// We need to run because first period ended
+```
+
+### HTTP Module
+
+The `http` module allows Node.js to transfer data over the Hyper Text Transfer Protocol (HTTP).
+
+### Basic Server Structure:
+
+1. **Create:** `http.createServer()` starts the server logic.
+2. **Response:** `res.write()` sends data, `res.end()` finishes the connection.
+3. **Listen:** `server.listen(port)` keeps the server running to accept requests.
+
+> **Note:** If you don't call `res.end()`, the browser will keep loading indefinitely.
+
+```jsx
+const http = require("http");
+
+const server = http.createServer((req, res) => {
+  res.write("Hello Programmers!");
+  res.write("How are you?");
+  res.end();
+});
+server.listen(3000);
+console.log("listening on port 3000");
 ```
