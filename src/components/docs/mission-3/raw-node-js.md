@@ -2,7 +2,7 @@
 
 ---
 
-## 3-Install and update 'yarn'
+# 3-Install and update 'yarn'
 
 Please follow the instructions to install or update yarn in your machine.
 
@@ -102,7 +102,7 @@ Create a `.eslintrc.json` file in the project root and enter the following con
 }
 ```
 
-## 4-Global Object & Module System
+# 4-Global Object & Module System
 
 This document covers the essential internal workings of Node.js modules, including global-like variables and the wrapper function.
 
@@ -171,7 +171,7 @@ Every time Node.js executes a file, it wraps the code inside a hidden function b
 1. **Scoping:** It keeps top-level variables (declared with `var`, `let` or `const`) local to the module rather than the global object. This prevents variable name conflicts between files.
 2. **Dependency Injection:** It provides the module-specific variables (`require`, `module`, etc.) that are necessary for the module system to function.
 
-## 5-Node.js Server & Core Modules
+# 5-Node.js Server & Core Modules
 
 ### Path Module
 
@@ -359,4 +359,348 @@ const server = http.createServer((req, res) => {
 });
 server.listen(3000);
 console.log("listening on port 3000");
+```
+
+# 6- Node.js — Stream & Buffer
+
+---
+
+## 🔷 Stream ও Buffer কী?
+
+### Buffer
+
+Buffer হলো **অস্থায়ী মেমোরি স্টোরেজ** যেখানে raw binary data রাখা হয়।
+
+> 💡 **সহজ কথায়:** Buffer = পানির বালতি 🪣 — সব data একসাথে ধরে রাখে
+
+```js
+// String থেকে Buffer তৈরি
+const buffer1 = Buffer.from("Hello, Dhaka!");
+console.log(buffer1); // <Buffer 48 65 6c 6c 6f ...>
+console.log(buf1.toString()); // Hello, Dhaka!
+
+// নির্দিষ্ট সাইজের Buffer (zero-filled)
+const buffer2 = Buffer.alloc(4);
+console.log(buffer2); // <Buffer 00 00 00 00>
+
+// Array থেকে Buffer
+const buffer3 = Buffer.from([72, 101, 108, 108, 111]);
+console.log(buffer3.toString()); // Hello
+```
+
+### Buffer-এর গুরুত্বপূর্ণ Methods
+
+```js
+const buf = Buffer.from("Hello World");
+
+buf.length; // 11 — দৈর্ঘ্য
+buf.slice(0, 5).toString(); // 'Hello' — নির্দিষ্ট অংশ
+buf.toString("hex"); // hex format
+buf.toString("base64"); // base64 format
+Buffer.isBuffer(buf); // true — Buffer কিনা চেক
+Buffer.concat([buf1, buf2]); // দুটো Buffer জোড়া দেওয়া
+```
+
+### Stream
+
+Stream হলো data-এর ক্রমাগত প্রবাহ — পুরো data একসাথে না এনে **chunk** করে পাঠায়।
+
+> 💡 **সহজ কথায়:** Stream = পানির পাইপ 🚰 — ধীরে ধীরে বয়ে যায়
+
+**Stream ৪ ধরনের:**
+
+| ধরন         | কাজ                    | উদাহরণ                       |
+| ----------- | ---------------------- | ---------------------------- |
+| `Readable`  | শুধু data পড়া         | File পড়া, HTTP request body |
+| `Writable`  | শুধু data লেখা         | File লেখা, HTTP response     |
+| `Duplex`    | পড়া + লেখা দুটোই      | TCP socket                   |
+| `Transform` | পড়ে, বদলে, তারপর লেখে | gzip, encryption             |
+
+## 🔷 Example — Incoming Request
+
+HTTP request আসলে সেটা একটা **Readable Stream** হিসেবে আসে — পুরো body একসাথে নয়, chunk করে।
+
+```js
+const http = require("http");
+
+const server = http.createServer((req, res) => {
+  let body = "";
+
+  // data event — প্রতিটি chunk আসলে fire হয়
+  req.on("data", (chunk) => {
+    console.log("Chunk:", chunk);
+    body += chunk.toString();
+  });
+
+  // end event — পুরো request body আসা শেষ
+  req.on("end", () => {
+    console.log("পুরো body:", body);
+    res.end("Request পেয়েছি!");
+  });
+});
+
+server.listen(3000, () => {
+  console.log("Server: http://localhost:3000");
+});
+```
+
+> ⚠️ **গুরুত্বপূর্ণ:** Request body কখনো একসাথে আসে না। বড় POST request হলে অনেকগুলো `data` event fire হয়। সবগুলো chunk জোড়া দিলে তবেই পুরো body পাওয়া যায়।
+
+---
+
+## 🔷 Read Stream কী?
+
+Readable Stream দিয়ে data **পড়া** হয় — file, HTTP request, অথবা যেকোনো data source থেকে।
+
+```js
+const fs = require("fs");
+
+const readable = fs.createReadStream("bigfile.txt", {
+  encoding: "utf8",
+  highWaterMark: 16 * 1024, // chunk size: 16KB (default: 64KB)
+});
+
+// data event — প্রতিটি chunk আসলে fire হয়
+readable.on("data", (chunk) => {
+  console.log("Chunk পেলাম:", chunk.length, "bytes");
+  console.log(Buffer.isBuffer(chunk)); // encoding না দিলে true
+});
+
+// end event — সব data পড়া শেষ
+readable.on("end", () => {
+  console.log("পড়া শেষ!");
+});
+
+// error event — কোনো সমস্যা হলে
+readable.on("error", (err) => {
+  console.error("Error:", err);
+});
+```
+
+**Readable Stream-এর events:**
+
+| Event   | কখন fire হয়         |
+| ------- | -------------------- |
+| `data`  | প্রতিটি chunk আসলে   |
+| `end`   | সব data পড়া শেষ হলে |
+| `error` | কোনো error হলে       |
+| `close` | stream বন্ধ হলে      |
+
+---
+
+## 🔷 Example — File System
+
+File System থেকে বড় file পড়ার real example:
+
+```js
+const fs = require("fs");
+
+// ❌ এভাবে করলে পুরো file একসাথে memory-তে আসে — বড় file-এ সমস্যা
+fs.readFile("bigfile.txt", (err, data) => {
+  console.log(data);
+});
+
+// ✅ Stream দিয়ে chunk করে পড়া — memory efficient
+const readable = fs.createReadStream("bigfile.txt");
+
+let totalBytes = 0;
+
+readable.on("data", (chunk) => {
+  totalBytes += chunk.length;
+  console.log(`এখন পর্যন্ত পড়েছি: ${totalBytes} bytes`);
+});
+
+readable.on("end", () => {
+  console.log(`মোট পড়েছি: ${totalBytes} bytes`);
+});
+```
+
+**File copy করা Stream দিয়ে:**
+
+```js
+const fs = require("fs");
+
+const readable = fs.createReadStream("input.txt");
+const writable = fs.createWriteStream("output.txt");
+
+readable.on("data", (chunk) => {
+  writable.write(chunk);
+});
+
+readable.on("end", () => {
+  writable.end();
+  console.log("File copy সম্পন্ন!");
+});
+```
+
+---
+
+## 🔷 Example — Incoming Request with HTTP Server
+
+HTTP server-এ incoming request-এর data stream করে নিয়ে process করা:
+
+```js
+const http = require("http");
+
+const server = http.createServer((req, res) => {
+  // শুধু POST request handle করব
+  if (req.method === "POST") {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+
+      // সতর্কতা: অনেক বড় body আসলে থামিয়ে দাও
+      if (body.length > 1e6) {
+        req.destroy();
+        res.writeHead(413);
+        res.end("Request body অনেক বড়!");
+      }
+    });
+
+    req.on("end", () => {
+      console.log("Body পেয়েছি:", body);
+
+      // JSON parse করা
+      try {
+        const data = JSON.parse(body);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ message: "সফল!", data }));
+      } catch (e) {
+        res.writeHead(400);
+        res.end("Invalid JSON");
+      }
+    });
+  } else {
+    res.writeHead(200);
+    res.end("Hello!");
+  }
+});
+
+server.listen(3000);
+```
+
+---
+
+## 🔷 Write Stream
+
+Writable Stream দিয়ে data **লেখা** হয় — file, HTTP response, অথবা যেকোনো destination-এ।
+
+```js
+const fs = require("fs");
+
+const writable = fs.createWriteStream("output.txt");
+
+// data লেখা
+writable.write("প্রথম লাইন\n");
+writable.write("দ্বিতীয় লাইন\n");
+writable.write("তৃতীয় লাইন\n");
+
+// লেখা শেষ করা
+writable.end("শেষ লাইন\n");
+
+// finish event — সব লেখা শেষ হলে
+writable.on("finish", () => {
+  console.log("লেখা সম্পন্ন!");
+});
+
+// error event
+writable.on("error", (err) => {
+  console.error("Error:", err);
+});
+```
+
+**HTTP Response-এ Writable Stream:**
+
+```js
+const http = require("http");
+const fs = require("fs");
+
+const server = http.createServer((req, res) => {
+  // res হলো একটা Writable Stream
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.write("প্রথম অংশ\n");
+  res.write("দ্বিতীয় অংশ\n");
+  res.end("শেষ অংশ"); // লেখা শেষ
+});
+
+server.listen(3000);
+```
+
+**Writable Stream-এর events:**
+
+| Event    | কখন fire হয়                     |
+| -------- | -------------------------------- |
+| `finish` | সব data লেখা শেষ হলে             |
+| `drain`  | buffer খালি হলে (আবার লেখা যাবে) |
+| `error`  | কোনো error হলে                   |
+
+---
+
+## 🔷 Pipe কী?
+
+`pipe()` দিয়ে একটা **Readable Stream-এর output** সরাসরি একটা **Writable Stream-এ** পাঠানো যায়।
+
+> 💡 **সহজ কথায়:** দুটো পাইপ জোড়া দেওয়া — একটা থেকে বের হয়ে সরাসরি আরেকটায় ঢোকে।
+
+```js
+const fs = require("fs");
+
+// File copy — সবচেয়ে সহজ উপায়
+const readStream = fs.createReadStream("input.txt");
+const writeStream = fs.createWriteStream("output.txt");
+
+readStream.pipe(writeStream);
+
+writeStream.on("finish", () => {
+  console.log("Copy সম্পন্ন!");
+});
+```
+
+**HTTP server-এ file stream করা:**
+
+```js
+const http = require("http");
+const fs = require("fs");
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "video/mp4" });
+
+  // file সরাসরি response-এ stream করা
+  fs.createReadStream("video.mp4").pipe(res);
+});
+
+server.listen(3000);
+```
+
+> ⚠️ **সমস্যা:** `pipe()` নিজে থেকে error handle করে না। কোনো step-এ error হলে stream ঠিকমতো বন্ধ নাও হতে পারে।
+
+---
+
+## 🔷 Transform Stream
+
+Transform Stream একই সাথে **পড়ে, বদলায়, এবং লেখে**
+
+## 🔷 Backpressure
+
+Backpressure হলো যখন **Writable stream, Readable stream-এর চেয়ে ধীরে** data নিতে পারে।
+
+## 🔷 pipeline() vs pipe()
+
+```js
+// ❌ pipe() — error handle করে না
+readable.pipe(transform).pipe(writable);
+
+// ✅ pipeline() — error handle করে (Node.js 10+)
+const { pipeline } = require("stream");
+
+pipeline(
+  fs.createReadStream("input.txt"),
+  zlib.createGzip(),
+  fs.createWriteStream("output.txt.gz"),
+  (err) => {
+    if (err) console.error("Pipeline failed:", err);
+    else console.log("Done!");
+  },
+);
 ```
