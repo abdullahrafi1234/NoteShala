@@ -13,12 +13,19 @@ export const category: DocCategory = {
       markdownFile: "module-9.md",
       categoryId: "mission-3",
     },
-    {
-      id: "Raw-Node.js-Basic-to-Advanced",
-      title: "Raw Node.js Basic to Advanced",
-      order: 1,
-      markdownFile: "raw-node-js.md",
-      categoryId: "mission-3",
-    },
+    // {
+    //   id: "Raw-Node.js-Basic-to-Advanced",
+    //   title: "Raw Node.js Basic to Advanced",
+    //   order: 1,
+    //   markdownFile: "raw-node-js.md",
+    //   categoryId: "mission-3",
+    // },
+    // {
+    //   id: "Raw-Node.js-Anatomy",
+    //   title: "Raw Node.js Anatomy",
+    //   order: 1,
+    //   markdownFile: "node-js-anatomy.md",
+    //   categoryId: "mission-3",
+    // },
   ],
 };
