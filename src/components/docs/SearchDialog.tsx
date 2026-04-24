@@ -2,8 +2,7 @@ import type { DocSection } from "@/components/docs/interfaces";
 import { getAllSections } from "@/components/docs/loader";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import Fuse, { FuseResult } from "fuse.js";
-import { ArrowRight, FileText, Search } from "lucide-react";
+import { ArrowRight, FileText, Hash, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,71 +11,78 @@ interface SearchDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface SearchResult {
+  sectionId: string;
+  sectionTitle: string;
+  headingText: string;
+  headingLevel: number;
+  slug: string;
+}
+
+const slugify = (text: string): string => {
+  return String(text)
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
+const extractHeadings = (section: DocSection): SearchResult[] => {
+  if (!section.content) return [];
+
+  const lines = section.content.split("\n");
+  const results: SearchResult[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    if (headingMatch) {
+      const headingText = headingMatch[2].trim();
+      results.push({
+        sectionId: section.id,
+        sectionTitle: section.title,
+        headingText,
+        headingLevel: headingMatch[1].length,
+        slug: slugify(headingText),
+      });
+      continue;
+    }
+
+    const boldMatches = [...trimmed.matchAll(/\*\*(.*?)\*\*/g)];
+    for (const m of boldMatches) {
+      const boldText = m[1].trim();
+      if (boldText.length < 3) continue;
+      results.push({
+        sectionId: section.id,
+        sectionTitle: section.title,
+        headingText: boldText,
+        headingLevel: 0,
+        slug: slugify(boldText),
+      });
+    }
+  }
+
+  return results;
+};
+
 export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const sections = useMemo(() => getAllSections(), []);
 
-  // আপনার রিকোয়েস্ট অনুযায়ী শুধু #, ##, ### এবং ** ফিল্টার করার ফাংশন
-  const extractSpecificText = (content: string) => {
-    if (!content) return "";
-
-    // ১. হেডিং ম্যাচ: #, ##, ###
-    const headingRegex = /^#{1,3}\s+(.+)$/gm;
-    // ২. বোল্ড টেক্সট ম্যাচ: **text**
-    const boldRegex = /\*\*(.*?)\*\*/g;
-    // ৩. কোলন যুক্ত কি-ওয়ার্ড ম্যাচ (যেমন: Frameworks:)
-    const keywordRegex = /^([A-Z][\w\s]+:)$/gm;
-
-    const matchedParts: string[] = [];
-    let match;
-
-    // হেডিং সংগ্রহ
-    while ((match = headingRegex.exec(content)) !== null) {
-      matchedParts.push(match[1].trim());
-    }
-
-    // বোল্ড টেক্সট সংগ্রহ
-    while ((match = boldRegex.exec(content)) !== null) {
-      matchedParts.push(match[1].trim());
-    }
-
-    // কোলন যুক্ত কি-ওয়ার্ড সংগ্রহ (যেমন: Frameworks:)
-    while ((match = keywordRegex.exec(content)) !== null) {
-      matchedParts.push(match[1].replace(":", "").trim());
-    }
-
-    return matchedParts.join(" ");
-  };
-
-  // ডাটাবেজ প্রসেসিং
-  const processedData = useMemo(() => {
-    return sections.map((section) => ({
-      ...section,
-      // এই ফিল্ডে শুধু আপনার চাওয়া টেক্সটগুলো থাকবে
-      onlySpecifics: extractSpecificText(section.content),
-    }));
+  const allHeadings = useMemo(() => {
+    return sections.flatMap((section) => extractHeadings(section));
   }, [sections]);
 
-  // Fuse.js কনফিগারেশন
-  const fuse = useMemo(
-    () =>
-      new Fuse(processedData, {
-        keys: [
-          { name: "title", weight: 0.3 }, // ফাইলের নাম
-          { name: "onlySpecifics", weight: 0.7 }, // আপনার স্পেসিফিক হেডিং ও বোল্ড লেখা
-        ],
-        threshold: 0.3,
-        minMatchCharLength: 2,
-        shouldSort: true,
-      }),
-    [processedData]
-  );
-
   const results = useMemo(() => {
-    if (!query.trim()) return [];
-    return fuse.search(query).slice(0, 8);
-  }, [query, fuse]);
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return allHeadings
+      .filter((h) => h.headingText.toLowerCase().includes(q))
+      .slice(0, 10);
+  }, [query, allHeadings]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -89,8 +95,20 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onOpenChange]);
 
-  const handleSelect = (section: DocSection) => {
-    navigate(`/docs/${section.id}`);
+  useEffect(() => {
+    if (!open) setQuery("");
+  }, [open]);
+
+  const handleSelect = (result: SearchResult) => {
+    if (result.headingLevel === 0) {
+      navigate(`/docs/${result.sectionId}`);
+    } else {
+      navigate(`/docs/${result.sectionId}#${result.slug}`);
+      setTimeout(() => {
+        const el = document.getElementById(result.slug);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
     onOpenChange(false);
     setQuery("");
   };
@@ -103,7 +121,7 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search headings and key terms..."
+            placeholder="Search headings and bold text..."
             className="border-0 focus-visible:ring-0 text-lg shadow-none"
             autoFocus
           />
@@ -112,7 +130,7 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
         <div className="max-h-[65vh] overflow-y-auto p-2">
           {query.trim() === "" ? (
             <div className="p-12 text-center text-muted-foreground opacity-50">
-              <p>Search specifically in Headings and Bold terms</p>
+              <p>Search in # ## ### headings and bold text</p>
             </div>
           ) : results.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">
@@ -120,24 +138,46 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
             </div>
           ) : (
             <div className="space-y-1">
-              {results.map((res: FuseResult<DocSection>) => (
+              {results.map((result, index) => (
                 <button
-                  key={res.item.id}
-                  onClick={() => handleSelect(res.item)}
+                  key={`${result.sectionId}-${result.slug}-${index}`}
+                  onClick={() => handleSelect(result)}
                   className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-muted transition-all text-left group"
                 >
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                    <FileText className="h-4 w-4" />
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+                    {result.headingLevel === 0 ? (
+                      <span className="text-xs font-black px-0.5">B</span>
+                    ) : result.headingLevel === 1 ? (
+                      <FileText className="h-4 w-4" />
+                    ) : (
+                      <Hash className="h-4 w-4" />
+                    )}
                   </div>
+
                   <div className="flex-1 overflow-hidden">
-                    <p className="font-bold text-foreground truncate">
-                      {res.item.title}
+                    <p
+                      className="font-bold text-foreground truncate"
+                      style={{
+                        fontSize:
+                          result.headingLevel === 0
+                            ? "0.825rem"
+                            : result.headingLevel === 1
+                              ? "1rem"
+                              : result.headingLevel === 2
+                                ? "0.95rem"
+                                : "0.875rem",
+                      }}
+                    >
+                      {result.headingLevel === 0
+                        ? `** ${result.headingText}`
+                        : `${"#".repeat(result.headingLevel)} ${result.headingText}`}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate opacity-70">
-                      In: {res.item.id}
+                    <p className="text-xs text-muted-foreground truncate opacity-70 mt-0.5">
+                      {result.sectionTitle}
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </button>
               ))}
             </div>

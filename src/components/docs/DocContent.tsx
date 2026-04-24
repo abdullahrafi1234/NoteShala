@@ -1,5 +1,6 @@
-import { getAllSections, getSectionById } from "@/components/docs/loader"; // তোমার loader file
+import { getAllSections, getSectionById } from "@/components/docs/loader";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
@@ -18,6 +19,10 @@ export const DocContent = () => {
       ? allSections[currentIndex + 1]
       : null;
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [sectionId]);
+
   if (!section) {
     return (
       <div className="flex-1 p-8">
@@ -34,7 +39,6 @@ export const DocContent = () => {
   return (
     <div className="flex-1 min-w-0">
       <div className="max-w-3xl mx-auto px-6 py-8">
-        {/* এখানে direct content use করো – কোনো loading নেই! */}
         <MarkdownRenderer content={section.content} />
 
         <div className="mt-16 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between gap-4">
@@ -78,3 +82,5 @@ export const DocContent = () => {
     </div>
   );
 };
+
+export default DocContent;

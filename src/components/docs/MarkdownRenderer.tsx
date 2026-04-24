@@ -1,7 +1,7 @@
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
 
 interface MarkdownRendererProps {
   content: string;
@@ -16,10 +16,13 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
           code({ node, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || "");
             const isInline = !match && !className;
-            
+
             if (isInline) {
               return (
-                <code className="bg-muted px-1.5 py-0.5 rounded text-sm text-primary font-medium font-mono" {...props}>
+                <code
+                  className="bg-muted px-1.5 py-0.5 rounded text-sm text-primary font-medium font-mono"
+                  {...props}
+                >
                   {children}
                 </code>
               );
@@ -62,7 +65,9 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
             </h3>
           ),
           p: ({ children }) => (
-            <p className="mb-4 text-foreground/80 leading-relaxed">{children}</p>
+            <p className="mb-4 text-foreground/80 leading-relaxed">
+              {children}
+            </p>
           ),
           ul: ({ children }) => (
             <ul className="mb-4 pl-6 space-y-2 list-disc">{children}</ul>
