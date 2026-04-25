@@ -181,14 +181,14 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden sm:rounded-xl bg-background border shadow-2xl w-[95vw] sm:w-full top-[5vh] sm:top-[50%] translate-y-0 sm:translate-y-[-50%]">
+      <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden sm:rounded-xl bg-background border shadow-2xl">
         {/* এই দুই line যোগ করুন */}
         <DialogTitle className="sr-only">Search</DialogTitle>
         <DialogDescription className="sr-only">
           Search in docs
         </DialogDescription>
 
-        {/* <div className="flex items-center border-b px-4 py-3"></div> */}
+        <div className="flex items-center border-b px-4 py-3"></div>
 
         <div className="flex items-center border-b px-4 py-3">
           <Search className="h-5 w-5 text-muted-foreground shrink-0" />

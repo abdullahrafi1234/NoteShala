@@ -2,7 +2,7 @@
 
 ---
 
-# 3-Install and update 'yarn'
+## 3-Install and update 'yarn'
 
 Please follow the instructions to install or update yarn in your machine.
 
@@ -181,7 +181,11 @@ The `node:path` module provides utilities for working with file and directory 
 2. The `path.dirname()` method returns the directory name of a `path` . It returns the location of the entire directory or folder preceding a path, excluding the file name.
 3. The `path.extname()` method returns the extension of the `path`, from the last occurrence of the `.` (period) character to end of string in the last portion of the `path`.
 4. The `path.parse()` method returns an object whose properties represent significant elements of the `path`.
-5. For more, visit [https://www.w3schools.com/nodejs/nodejs_path.asp](https://www.w3schools.com/nodejs/nodejs_path.asp)
+5. For more, visit
+
+```jsx
+ https://www.w3schools.com/nodejs/nodejs_path.asp`
+```
 
 ```jsx
 const path = require("path");
@@ -209,7 +213,11 @@ The `node:os` module provides operating system-related utility methods and pro
 
 1. **`os.freemem()`**Returns the amount of free system memory in bytes as an integer.
 2. **`os.cpus()`**Returns an array of objects containing information about each logical CPU core. The information includes model, speed (in MHz), and times.
-3. for more, visit [https://www.w3schools.com/nodejs/nodejs_os.asp](https://www.w3schools.com/nodejs/nodejs_os.asp)
+3. for more, visit
+
+```jsx
+https://www.w3schools.com/nodejs/nodejs_os.asp
+```
 
 ```jsx
 const os = require("os");
@@ -230,7 +238,10 @@ console.log(os.cpus());
 - **`appendFileSync()`**: This method **appends** (adds) specified content to a file. If the file does not exist, it will be created.
 - **`readFileSync()`**: This method is used to read files on your computer. By default, it returns raw binary data called a **Buffer**.
 - **`toString()`**: Since the output is a Buffer (hexadecimal numbers), we use `.toString()` to convert that data into a human-readable string.
-- For more, Visit [ https://www.w3schools.com/nodejs/nodejs_filesystem.asp](https://www.w3schools.com/nodejs/nodejs_filesystem.asp)
+
+```jsx
+- For more, Visit->  https://www.w3schools.com/nodejs/nodejs_filesystem.asp
+```
 
 ```jsx
 const fs = require("fs");

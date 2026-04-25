@@ -16,14 +16,14 @@ export const MobileSidebar = () => {
   const { sectionId } = useParams();
   const [isOpen, setIsOpen] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<string[]>(
-    docsData.map((cat) => cat.id)
+    docsData.map((cat) => cat.id),
   );
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories((prev) =>
       prev.includes(categoryId)
         ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
+        : [...prev, categoryId],
     );
   };
 
@@ -63,7 +63,7 @@ export const MobileSidebar = () => {
                       onClick={() => setIsOpen(false)}
                       className={cn(
                         "sidebar-item block",
-                        sectionId === section.id && "sidebar-item-active"
+                        sectionId === section.id && "sidebar-item-active",
                       )}
                     >
                       {section.title}
