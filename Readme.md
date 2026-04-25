@@ -69,8 +69,6 @@ npm run start
 
 ---
 
-## 📁 Project Structure
-
 ```
 
 ```
@@ -109,17 +107,3 @@ NEXT_PUBLIC_APP_NAME=Shalala
 5. GitHub-এ গিয়ে **Pull Request** খোলো
 
 ---
-
-## 🐛 কোনো সমস্যা হলে
-
-কোনো bug পেলে বা কোনো সাজেশন থাকলে [GitHub Issues](https://github.com/your-username/shalala/issues) এ জানাও।
-
----
-
-## 📄 License
-
-এই প্রজেক্টটি [MIT License](LICENSE) এর অধীনে।
-
----
-
-<p align="center">Made with ❤️ — Shalala</p>
