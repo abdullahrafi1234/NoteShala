@@ -1,8 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @layer base {
   :root {
@@ -303,4 +303,23 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+@keyframes highlight-glow-cyan {
+  0% {
+    background-color: rgba(0, 255, 255, 0.4);
+    color: #fff;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    border-radius: 4px;
+  }
+  100% {
+    background-color: transparent;
+    color: inherit;
+    box-shadow: none;
+  }
+}
+
+.highlight-heading {
+  animation: highlight-glow-cyan 2s ease-out forwards;
+  padding: 0 4px;
 }

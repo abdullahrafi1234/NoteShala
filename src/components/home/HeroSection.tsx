@@ -1,18 +1,57 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const typingWords = [
+  "TypeScript",
+  "Node.js",
+  "Express",
+  "Golang",
+  "Next.js",
+  "PostgreSQL",
+  "Prisma",
+  "Docker",
+  "Nginx",
+];
+
 export const HeroSection = () => {
+  const [currentWord, setCurrentWord] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const word = typingWords[wordIndex];
+    const speed = isDeleting ? 80 : 120;
+
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        setCurrentWord(word.slice(0, currentWord.length + 1));
+        if (currentWord.length + 1 === word.length) {
+          setTimeout(() => setIsDeleting(true), 1200);
+        }
+      } else {
+        setCurrentWord(word.slice(0, currentWord.length - 1));
+        if (currentWord.length === 0) {
+          setIsDeleting(false);
+          setWordIndex((prev) => (prev + 1) % typingWords.length);
+        }
+      }
+    }, speed);
+
+    return () => clearTimeout(timeout);
+  }, [currentWord, isDeleting, wordIndex]);
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] animate-pulse-glow" />
+        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/20 rounded-full blur-[128px] animate-pulse-glow" />
         <div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[128px] animate-pulse-glow"
+          className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-accent/20 rounded-full blur-[128px] animate-pulse-glow"
           style={{ animationDelay: "1s" }}
         />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-primary/10 to-transparent rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-radial from-primary/10 to-transparent rounded-full" />
       </div>
 
       {/* Grid Pattern */}
@@ -27,10 +66,10 @@ export const HeroSection = () => {
         }}
       />
 
-      <div className="relative container mx-auto px-4 text-center">
+      <div className="relative container mx-auto px-4 text-center py-16">
         {/* Badge */}
         <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium mb-8 animate-fade-in-up opacity-0"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium mb-6 animate-fade-in-up opacity-0"
           style={{ animationFillMode: "forwards" }}
         >
           <Sparkles className="h-4 w-4" />
@@ -39,7 +78,7 @@ export const HeroSection = () => {
 
         {/* Title */}
         <h1
-          className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-6 animate-fade-in-up opacity-0 animation-delay-100"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 animate-fade-in-up opacity-0 animation-delay-100"
           style={{ animationFillMode: "forwards" }}
         >
           <span className="gradient-text">Next Level</span>
@@ -47,26 +86,23 @@ export const HeroSection = () => {
           <span className="text-foreground">Bootcamp Notes</span>
         </h1>
 
-        {/* Subtitle */}
-        <p
-          className="max-w-2xl mx-auto text-lg sm:text-xl text-muted-foreground mb-4 animate-fade-in-up opacity-0 animation-delay-200"
+        {/* Typing Animation */}
+        <div
+          className="mb-4 animate-fade-in-up opacity-0 animation-delay-200"
           style={{ animationFillMode: "forwards" }}
         >
-          6-Month Journey Learning{" "}
-          <span className="text-foreground font-medium">TypeScript</span>,{" "}
-          <span className="text-foreground font-medium">Node.js</span>,{" "}
-          <span className="text-foreground font-medium">Express</span>,{" "}
-          <span className="text-foreground font-medium">Golang</span>,{" "}
-          <span className="text-foreground font-medium">Next.js</span>,{" "}
-          <span className="text-foreground font-medium">PostgreSQL</span>,{" "}
-          <span className="text-foreground font-medium">Prisma</span>,{" "}
-          <span className="text-foreground font-medium">Docker</span> &{" "}
-          <span className="text-foreground font-medium">Nginx</span>.
-        </p>
+          <p className="text-lg sm:text-xl text-muted-foreground">
+            Currently Learning{" "}
+            <span className="text-primary font-bold">
+              {currentWord}
+              <span className="animate-pulse">|</span>
+            </span>
+          </p>
+        </div>
 
         {/* Tagline */}
         <p
-          className="text-muted-foreground mb-10 italic animate-fade-in-up opacity-0 animation-delay-300"
+          className="text-muted-foreground mb-8 italic animate-fade-in-up opacity-0 animation-delay-300"
           style={{ animationFillMode: "forwards" }}
         >
           "Learning, Building, and Documenting — One Stack at a Time."
@@ -86,7 +122,7 @@ export const HeroSection = () => {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-float">
           <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
             <div className="w-1 h-2 rounded-full bg-muted-foreground/50 animate-pulse" />
           </div>

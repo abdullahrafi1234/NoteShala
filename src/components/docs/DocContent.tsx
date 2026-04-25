@@ -36,6 +36,28 @@ export const DocContent = () => {
     );
   }
 
+  useEffect(() => {
+    if (section) {
+      // last visited save
+      localStorage.setItem(
+        "lastVisited",
+        JSON.stringify({
+          id: section.id,
+          title: section.title,
+          categoryId: section.categoryId,
+        }),
+      );
+
+      // read sections save
+      const saved = localStorage.getItem("readSections");
+      const readSections: string[] = saved ? JSON.parse(saved) : [];
+      if (!readSections.includes(section.id)) {
+        readSections.push(section.id);
+        localStorage.setItem("readSections", JSON.stringify(readSections));
+      }
+    }
+  }, [section?.id]);
+
   return (
     <div className="flex-1 min-w-0">
       <div className="max-w-3xl mx-auto px-6 py-8">

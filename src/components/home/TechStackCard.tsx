@@ -20,12 +20,12 @@ export const TechStackCard = ({
     >
       <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-      <div className="relative">
-        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform duration-300">
+      <div className="relative flex flex-col items-center text-center">
+        <div className="w-16 h-16 rounded-xl flex items-center justify-center mb-4 bg-muted/30 group-hover:bg-primary/10 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-primary/20 group-hover:scale-110">
           {icon}
         </div>
 
-        <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+        <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
           {title}
         </h3>
 
