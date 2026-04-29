@@ -1,6 +1,16 @@
 import { SearchDialog } from "@/components/docs/SearchDialog";
 import { Button } from "@/components/ui/button";
-import { FileText, Github, Linkedin, Menu, Search, X } from "lucide-react";
+import {
+  FileText,
+  Github,
+  Linkedin,
+  Menu,
+  Moon,
+  Search,
+  Sun,
+  X,
+} from "lucide-react";
+import { useTheme } from "next-themes";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -8,7 +18,7 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
-
+  const { theme, setTheme } = useTheme();
   const isDocsPage = location.pathname.startsWith("/docs");
 
   return (
@@ -43,6 +53,17 @@ export const Navbar = () => {
                 <FileText className="h-4 w-4" />
                 Docs
               </Link>
+              {/* Dark/light theme */}
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </button>
 
               {/* Search Button - Fixed Width + Better Behavior */}
               <Button
@@ -82,6 +103,16 @@ export const Navbar = () => {
             </div>
 
             {/* Mobile Menu Buttons */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </button>
             <div className="flex items-center gap-2 md:hidden">
               <Button
                 variant="ghost"

@@ -23,6 +23,7 @@ interface CodeBlockProps {
 
 const CodeBlock = ({ language, children }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     codeToHtml(children, {
@@ -31,11 +32,16 @@ const CodeBlock = ({ language, children }: CodeBlockProps) => {
     })
       .then(setHtml)
       .catch(() => {
-        codeToHtml(children, { lang: "text", theme: "dark-plus" }).then(
-          setHtml,
-        );
+        codeToHtml(children, { lang: "text", theme: "dracula" }).then(setHtml);
       });
   }, [children, language]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(children).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   if (!html) {
     return (
@@ -55,11 +61,62 @@ const CodeBlock = ({ language, children }: CodeBlockProps) => {
   }
 
   return (
-    <div
-      className="mb-4 rounded-xl overflow-hidden text-sm"
-      style={{ fontFamily: "'JetBrains Mono', monospace" }}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div className="relative mb-4 rounded-xl overflow-hidden group">
+      {/* Language badge */}
+      {language && (
+        <div className="absolute top-3 left-4 z-10 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
+          {language}
+        </div>
+      )}
+
+      {/* Copy button */}
+      <button
+        onClick={handleCopy}
+        className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 opacity-0 group-hover:opacity-100 bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50"
+      >
+        {copied ? (
+          <>
+            <svg
+              className="h-3.5 w-3.5 text-green-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="text-green-400">Copied!</span>
+          </>
+        ) : (
+          <>
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+              />
+            </svg>
+            Copy
+          </>
+        )}
+      </button>
+
+      <div
+        className="text-sm"
+        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
   );
 };
 

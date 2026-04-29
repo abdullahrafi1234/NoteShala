@@ -1,3 +1,4 @@
+import { BackToTop } from "@/components/docs/BackToTop";
 import { DocContent } from "@/components/docs/DocContent";
 import { docsData, getSectionById } from "@/components/docs/loader";
 import { MobileSidebar } from "@/components/docs/MobileSidebar";
@@ -682,6 +683,7 @@ const Docs = () => {
           )}
         </div>
       </div>
+      <BackToTop></BackToTop>
     </div>
   );
 };
