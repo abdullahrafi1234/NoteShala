@@ -1,4 +1,5 @@
 import { BackToTop } from "@/components/docs/BackToTop";
+import { Breadcrumb } from "@/components/docs/Breadcrumb";
 import { DocContent } from "@/components/docs/DocContent";
 import { docsData, getSectionById } from "@/components/docs/loader";
 import { MobileSidebar } from "@/components/docs/MobileSidebar";
@@ -639,6 +640,8 @@ const Docs = () => {
             <div className="lg:hidden p-4 border-b border-border">
               <MobileSidebar />
             </div>
+
+            {sectionId && <Breadcrumb sectionId={sectionId} />}
 
             {sectionId && (
               <LiveTimer

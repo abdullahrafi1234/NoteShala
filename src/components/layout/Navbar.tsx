@@ -1,15 +1,6 @@
 import { SearchDialog } from "@/components/docs/SearchDialog";
 import { Button } from "@/components/ui/button";
-import {
-  FileText,
-  Github,
-  Linkedin,
-  Menu,
-  Moon,
-  Search,
-  Sun,
-  X,
-} from "lucide-react";
+import { Github, Linkedin, Menu, Moon, Search, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -17,6 +8,7 @@ import { Link, useLocation } from "react-router-dom";
 export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const location = useLocation();
   const { theme, setTheme } = useTheme();
   const isDocsPage = location.pathname.startsWith("/docs");
@@ -26,7 +18,7 @@ export const Navbar = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            {/* Logo - Left Side */}
+            {/* Logo */}
             <Link
               to="/"
               className="flex items-center gap-2 text-foreground hover:text-primary transition-colors flex-shrink-0"
@@ -41,19 +33,73 @@ export const Navbar = () => {
               </span>
             </Link>
 
-            {/* Desktop Navigation - Right Side */}
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              {/* Docs Link */}
-              <Link
-                to="/docs"
-                className={`flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary ${
-                  isDocsPage ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                Docs
-              </Link>
-              {/* Dark/light theme */}
+              {/* Docs Icon with Tooltip */}
+              <div className="relative">
+                <Link
+                  to="/docs"
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                  className={`group flex items-center transition-colors hover:text-primary ${
+                    isDocsPage ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  <div
+                    className={`relative p-2 rounded-lg transition-all duration-300 ${
+                      isDocsPage ? "bg-primary/15" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <defs>
+                        <linearGradient
+                          id="docIconGrad"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="100%"
+                        >
+                          <stop offset="0%" stopColor="#06b6d4" />
+                          <stop offset="50%" stopColor="#8b5cf6" />
+                          <stop offset="100%" stopColor="#ec4899" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+                        stroke="url(#docIconGrad)"
+                      />
+                      <path
+                        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                        stroke="url(#docIconGrad)"
+                      />
+                      <path d="M8 7h8" stroke="url(#docIconGrad)" />
+                      <path d="M8 11h8" stroke="url(#docIconGrad)" />
+                      <path d="M8 15h5" stroke="url(#docIconGrad)" />
+                    </svg>
+
+                    {isDocsPage && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400/50" />
+                    )}
+                  </div>
+                </Link>
+
+                {/* Tooltip */}
+                {showTooltip && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 rounded-lg bg-popover border border-border shadow-lg text-xs font-semibold text-foreground whitespace-nowrap animate-fade-in">
+                    Documentation
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-popover border-l border-t border-border" />
+                  </div>
+                )}
+              </div>
+
+              {/* Theme Toggle */}
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
@@ -65,7 +111,7 @@ export const Navbar = () => {
                 )}
               </button>
 
-              {/* Search Button - Fixed Width + Better Behavior */}
+              {/* Search Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -86,7 +132,6 @@ export const Navbar = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="GitHub Repository"
                 >
                   <Github className="h-5 w-5" />
                 </a>
@@ -95,30 +140,28 @@ export const Navbar = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="LinkedIn Profile"
                 >
                   <Linkedin className="h-5 w-5" />
                 </a>
               </div>
             </div>
 
-            {/* Mobile Menu Buttons */}
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </button>
-            <div className="flex items-center gap-2 md:hidden">
+            {/* Mobile Buttons */}
+            <div className="flex items-center gap-1 md:hidden">
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+              >
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsSearchOpen(true)}
-                aria-label="Search documentation"
               >
                 <Search className="h-5 w-5" />
               </Button>
@@ -126,7 +169,6 @@ export const Navbar = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Toggle menu"
               >
                 {isMenuOpen ? (
                   <X className="h-5 w-5" />
@@ -148,7 +190,39 @@ export const Navbar = () => {
                     isDocsPage ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
-                  <FileText className="h-4 w-4" />
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <defs>
+                      <linearGradient
+                        id="docIconGradMobile"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="100%"
+                      >
+                        <stop offset="0%" stopColor="#06b6d4" />
+                        <stop offset="50%" stopColor="#8b5cf6" />
+                        <stop offset="100%" stopColor="#ec4899" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
+                      stroke="url(#docIconGradMobile)"
+                    />
+                    <path
+                      d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                      stroke="url(#docIconGradMobile)"
+                    />
+                    <path d="M8 7h8" stroke="url(#docIconGradMobile)" />
+                    <path d="M8 11h8" stroke="url(#docIconGradMobile)" />
+                    <path d="M8 15h5" stroke="url(#docIconGradMobile)" />
+                  </svg>
                   Docs
                 </Link>
 
@@ -177,7 +251,6 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* Search Dialog */}
       <SearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </>
   );
