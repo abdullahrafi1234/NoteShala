@@ -61,7 +61,7 @@ const CodeBlock = ({ language, children }: CodeBlockProps) => {
   }
 
   return (
-    <div className="relative mb-4 rounded-xl overflow-hidden group">
+    <div className="relative mb-0 rounded-xl overflow-hidden group">
       {/* Language badge */}
       {language && (
         <div className="absolute top-3 left-4 z-10 text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">
@@ -112,7 +112,7 @@ const CodeBlock = ({ language, children }: CodeBlockProps) => {
       </button>
 
       <div
-        className="text-sm"
+        className="text-sm pt-7 pb-0"
         style={{ fontFamily: "'JetBrains Mono', monospace" }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
