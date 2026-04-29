@@ -1,7 +1,8 @@
 import { DocContent } from "@/components/docs/DocContent";
-import { docsData } from "@/components/docs/loader";
+import { docsData, getSectionById } from "@/components/docs/loader";
 import { MobileSidebar } from "@/components/docs/MobileSidebar";
 import { Sidebar } from "@/components/docs/Sidebar";
+import { TableOfContents } from "@/components/docs/TableOfContents";
 import { Navbar } from "@/components/layout/Navbar";
 import {
   ArrowRight,
@@ -106,70 +107,17 @@ function saveStats(stats: ReadingStats) {
   }
 }
 
-// ─── Format Time ──────────────────────────────────────────────────────────────
-
 function formatTime(totalMinutes: number, liveSeconds?: number): string {
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
   const secs = liveSeconds !== undefined ? liveSeconds % 60 : null;
-
   if (hours > 0) {
     return secs !== null ? `${hours}h ${mins}m ${secs}s` : `${hours}h ${mins}m`;
   }
   return secs !== null ? `${mins}m ${secs}s` : `${mins}m`;
 }
 
-// ─── useLiveTimer — ISOLATED ──────────────────────────────────────────────────
-// শুধু এই hook টা setInterval চালায়। Parent-এ liveSeconds নেই।
-
-function useLiveTimer(active: boolean): number {
-  const [liveSeconds, setLiveSeconds] = useState(0);
-  const startRef = useRef<number>(Date.now());
-  const pausedRef = useRef<number>(0);
-  const hiddenAtRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!active) {
-      setLiveSeconds(0);
-      return;
-    }
-
-    startRef.current = Date.now();
-    pausedRef.current = 0;
-    hiddenAtRef.current = null;
-    setLiveSeconds(0);
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        hiddenAtRef.current = Date.now();
-      } else {
-        if (hiddenAtRef.current) {
-          pausedRef.current += Date.now() - hiddenAtRef.current;
-          hiddenAtRef.current = null;
-        }
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    const interval = setInterval(() => {
-      if (!document.hidden) {
-        const activeMs = Date.now() - startRef.current - pausedRef.current;
-        setLiveSeconds(Math.floor(activeMs / 1000));
-      }
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [active]);
-
-  return liveSeconds;
-}
-
-// ─── useReadingStats — liveSeconds নেই ───────────────────────────────────────
-// এই hook শুধু visited sections ও totalMinutes track করে।
-// setInterval নেই তাই প্রতি সেকেন্ডে re-render হয় না।
+// ─── useReadingStats ──────────────────────────────────────────────────────────
 
 function useReadingStats(currentSectionId?: string) {
   const [stats, setStats] = useState<ReadingStats>(loadStats);
@@ -180,11 +128,9 @@ function useReadingStats(currentSectionId?: string) {
   useEffect(() => {
     if (!currentSectionId) return;
 
-    // section visit save
     setStats((prev) => {
       let sectionTitle: string | null = null;
       let categoryTitle: string | null = null;
-
       for (const cat of docsData) {
         const idx = cat.sections.findIndex((s) => s.id === currentSectionId);
         if (idx !== -1) {
@@ -193,7 +139,6 @@ function useReadingStats(currentSectionId?: string) {
           break;
         }
       }
-
       const alreadyVisited = prev.visitedSections.includes(currentSectionId);
       const updated: ReadingStats = {
         ...prev,
@@ -208,7 +153,6 @@ function useReadingStats(currentSectionId?: string) {
       return updated;
     });
 
-    // timer reset
     startTimeRef.current = Date.now();
     pausedRef.current = 0;
     hiddenAtRef.current = null;
@@ -227,8 +171,6 @@ function useReadingStats(currentSectionId?: string) {
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-
-      // section leave হলে save
       const activeMs = Date.now() - startTimeRef.current - pausedRef.current;
       const activeMinutes = Math.floor(activeMs / 60000);
       if (activeMinutes >= 1) {
@@ -244,24 +186,39 @@ function useReadingStats(currentSectionId?: string) {
     };
   }, [currentSectionId]);
 
-  return stats; // liveSeconds নেই এখানে
+  return { stats, startTimeRef, pausedRef };
 }
 
-// ─── Total Reading Time Bar ───────────────────────────────────────────────────
-// নিজেই useLiveTimer চালায় — parent re-render ছাড়া
+// ─── LiveTimer — isolated component ──────────────────────────────────────────
 
-function TotalReadingTimeBar({
-  totalMinutes,
-  active,
+function LiveTimer({
+  startTimeRef,
+  pausedRef,
+  savedMinutes,
 }: {
-  totalMinutes: number;
-  active: boolean;
+  startTimeRef: React.MutableRefObject<number>;
+  pausedRef: React.MutableRefObject<number>;
+  savedMinutes: number;
 }) {
-  const liveSeconds = useLiveTimer(active); // ← isolated এখানে
-  const liveMinutes = Math.floor(liveSeconds / 60);
-  const displayMinutes = totalMinutes + liveMinutes;
-  const label = formatTime(displayMinutes, liveSeconds);
-  const percent = Math.min(100, (displayMinutes / 300) * 100);
+  const [liveSeconds, setLiveSeconds] = useState(0);
+
+  useEffect(() => {
+    setLiveSeconds(0);
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        const activeMs = Date.now() - startTimeRef.current - pausedRef.current;
+        setLiveSeconds(Math.floor(activeMs / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTimeRef, pausedRef]);
+
+  const totalSeconds = savedMinutes * 60 + liveSeconds;
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  const label = hours > 0 ? `${hours}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
+  const percent = Math.min(100, (savedMinutes / 300) * 100);
 
   return (
     <div className="px-5 py-3 border-b border-border/60 bg-gradient-to-r from-muted/50 via-background to-muted/30">
@@ -285,7 +242,6 @@ function TotalReadingTimeBar({
 }
 
 // ─── Overall Stats ────────────────────────────────────────────────────────────
-// liveSeconds দরকার নেই এখানে — শুধু totalMinutes দেখায়
 
 function OverallStats({
   stats,
@@ -420,7 +376,6 @@ function MissionCard({
         ].join(" ")}
         style={{ background: "hsl(var(--card))" }}
       >
-        {/* Radial background glow */}
         <div
           className="absolute inset-0 pointer-events-none transition-opacity duration-500 opacity-0 group-hover:opacity-100"
           style={{
@@ -428,14 +383,11 @@ function MissionCard({
           }}
         />
 
-        {/* Top gradient strip */}
         <div
           className={`h-1.5 w-full bg-gradient-to-r ${theme.gradient} flex-shrink-0`}
         />
 
-        {/* Body */}
         <div className="relative flex flex-col flex-1 p-5 gap-5">
-          {/* Icon block */}
           <div className="flex flex-col items-center text-center gap-3">
             <div
               className={[
@@ -461,13 +413,10 @@ function MissionCard({
               )}
             </div>
 
-            {/* Title */}
             <div>
               <h2 className="text-xl font-extrabold tracking-tight text-foreground leading-snug px-1">
                 {category.title}
               </h2>
-
-              {/* Meta pills */}
               <div className="flex items-center gap-2 mt-2.5 justify-center flex-wrap">
                 <span
                   className={`text-xs font-bold px-2.5 py-1 rounded-full ${theme.pill}`}
@@ -492,7 +441,6 @@ function MissionCard({
             </div>
           </div>
 
-          {/* Section list */}
           <div className="space-y-1.5 min-h-[9.5rem]">
             {visibleSections.map((section) => {
               const visited = visitedSections.includes(section.id);
@@ -534,7 +482,6 @@ function MissionCard({
               );
             })}
 
-            {/* See more */}
             <div className="h-7 flex items-center">
               {category.sections.length > 3 && (
                 <button
@@ -552,7 +499,6 @@ function MissionCard({
             </div>
           </div>
 
-          {/* Progress bar */}
           <div className={`rounded-2xl p-4 ${theme.innerBg} mt-auto`}>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -575,7 +521,6 @@ function MissionCard({
           </div>
         </div>
 
-        {/* Corner arrow */}
         <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
           <div
             className={`p-1.5 rounded-full bg-gradient-to-br ${theme.gradient} shadow-md`}
@@ -591,7 +536,7 @@ function MissionCard({
 // ─── Welcome Page ─────────────────────────────────────────────────────────────
 
 const WelcomePage = () => {
-  const stats = useReadingStats(undefined);
+  const { stats } = useReadingStats(undefined);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -606,7 +551,6 @@ const WelcomePage = () => {
 
   return (
     <div className="flex-1 min-w-0 px-6 py-12 max-w-6xl mx-auto">
-      {/* Hero */}
       <div
         className={[
           "mb-12 text-center transition-all duration-700",
@@ -617,7 +561,7 @@ const WelcomePage = () => {
           <Sparkles className="h-6 w-6" />
           "Ready to build today?"
         </div>
-        <h1 className="text-4xl sm:text-4xl font-black mb-4 tracking-tight">
+        <h1 className="text-4xl font-black mb-4 tracking-tight">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-[#00d4ff]">
             Learn → Build → Ship 🚀
           </span>
@@ -627,7 +571,6 @@ const WelcomePage = () => {
         </p>
       </div>
 
-      {/* Stats */}
       {stats.visitedSections.length > 0 && (
         <div
           className={[
@@ -640,7 +583,6 @@ const WelcomePage = () => {
         </div>
       )}
 
-      {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {docsData.map((category, i) => (
           <MissionCard
@@ -658,52 +600,18 @@ const WelcomePage = () => {
   );
 };
 
-// ─── Section Meta Badge ───────────────────────────────────────────────────────
-// Memoized — stats.lastVisited বদলালেই শুধু re-render হবে
-
-interface SectionMetaBadgeProps {
-  sectionId: string;
-  lastVisited: string | null;
-  readingTime: number;
-  theme: ReturnType<typeof getTheme>;
-}
-
-const SectionMetaBadge = ({
-  sectionId,
-  lastVisited,
-  readingTime,
-  theme,
-}: SectionMetaBadgeProps) => (
-  <div className="flex items-center gap-2.5 px-5 py-2.5 border-b border-border/50 bg-muted/10 flex-wrap">
-    <span
-      className={[
-        "flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full text-white shadow-sm",
-        `bg-gradient-to-r ${theme.gradient}`,
-      ].join(" ")}
-    >
-      <Clock className="h-3.5 w-3.5" />
-      {readingTime} min read
-    </span>
-    {lastVisited === sectionId && (
-      <span
-        className={[
-          "flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full",
-          theme.pill,
-        ].join(" ")}
-      >
-        <Zap className="h-3.5 w-3.5" />
-        Currently reading
-      </span>
-    )}
-  </div>
-);
-
 // ─── Docs Page ────────────────────────────────────────────────────────────────
 
 const Docs = () => {
   const { sectionId } = useParams();
-  // stats এ এখন liveSeconds নেই → প্রতি সেকেন্ডে re-render হবে না
-  const stats = useReadingStats(sectionId);
+  const { stats, startTimeRef, pausedRef } = useReadingStats(sectionId);
+
+  const currentSection = useMemo(() => {
+    if (!sectionId) return null;
+    const section = getSectionById(sectionId);
+    console.log("content length:", section?.content?.length); // ← যোগ করুন
+    return section;
+  }, [sectionId]);
 
   const currentSectionMeta = useMemo(() => {
     if (!sectionId) return null;
@@ -725,29 +633,53 @@ const Docs = () => {
       <Navbar />
       <div className="flex pt-16">
         <Sidebar />
-        <div className="flex-1 min-w-0">
-          <div className="lg:hidden p-4 border-b border-border">
-            <MobileSidebar />
+        <div className="flex-1 min-w-0 flex">
+          <div className="flex-1 min-w-0">
+            <div className="lg:hidden p-4 border-b border-border">
+              <MobileSidebar />
+            </div>
+
+            {sectionId && (
+              <LiveTimer
+                startTimeRef={startTimeRef}
+                pausedRef={pausedRef}
+                savedMinutes={stats.totalMinutes}
+              />
+            )}
+
+            {sectionId && currentSectionMeta && (
+              <div className="flex items-center gap-2.5 px-5 py-2.5 border-b border-border/50 bg-muted/10 flex-wrap">
+                <span
+                  className={[
+                    "flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full text-white shadow-sm",
+                    `bg-gradient-to-r ${currentSectionMeta.theme.gradient}`,
+                  ].join(" ")}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  {currentSectionMeta.readingTime} min read
+                </span>
+                {stats.lastVisited === sectionId && (
+                  <span
+                    className={[
+                      "flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full",
+                      currentSectionMeta.theme.pill,
+                    ].join(" ")}
+                  >
+                    <Zap className="h-3.5 w-3.5" />
+                    Currently reading
+                  </span>
+                )}
+              </div>
+            )}
+
+            {sectionId ? <DocContent /> : <WelcomePage />}
           </div>
 
-          {/* TotalReadingTimeBar নিজেই timer চালায় — Docs re-render করায় না */}
-          {sectionId && (
-            <TotalReadingTimeBar
-              totalMinutes={stats.totalMinutes}
-              active={!!sectionId}
-            />
+          {sectionId && currentSection && (
+            <div className="hidden xl:flex w-64 shrink-0 border-l border-border/50">
+              <TableOfContents content={currentSection.content} />
+            </div>
           )}
-
-          {sectionId && currentSectionMeta && (
-            <SectionMetaBadge
-              sectionId={sectionId}
-              lastVisited={stats.lastVisited}
-              readingTime={currentSectionMeta.readingTime}
-              theme={currentSectionMeta.theme}
-            />
-          )}
-
-          {sectionId ? <DocContent /> : <WelcomePage />}
         </div>
       </div>
     </div>
