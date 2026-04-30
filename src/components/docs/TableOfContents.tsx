@@ -30,7 +30,6 @@ function extractHeadings(content: string): Heading[] {
       });
     }
   }
-  console.log("headings found:", headings.length, headings); // ← যোগ করুন
   return headings;
 }
 
