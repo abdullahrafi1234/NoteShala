@@ -41,5 +41,12 @@ export const category: DocCategory = {
       markdownFile: "mongodb.md",
       categoryId: "mission-0",
     },
+    {
+      id: "Complete-Mongoose",
+      title: "Complete Mongoose",
+      order: 1,
+      markdownFile: "mongoose.md",
+      categoryId: "mission-0",
+    },
   ],
 };
