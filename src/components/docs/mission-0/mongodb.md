@@ -310,7 +310,7 @@ db.products.findOneAndDelete({ name: "iPad Pro" });
 
 ---
 
-## 11. Sort & Limit
+## 11. Sort, Limit, Skip & Select
 
 > 📖 [mongodb.com/docs/manual/reference/operator/aggregation/sort](https://www.mongodb.com/docs/manual/reference/operator/aggregation/sort/)
 
@@ -327,6 +327,20 @@ db.products.find().sort({ category: 1, price: -1 }); // multiple field sort
 ```javascript
 db.products.find().limit(3); // প্রথম 3টা
 db.products.find().skip(2).limit(3); // 2টা skip → পরের 3টা
+```
+
+### select()
+
+```javascript
+// String way
+.select('name price category')         // include — শুধু এই field
+.select('-password -__v')              // exclude — এই field বাদ
+.select('name price -_id')             // mix — _id বাদ, বাকি include
+.select('+password')                   // select:false field আনতে
+
+// Object way
+.select({ _id: 0, __v: 0, date: 0 })  // 0 = বাদ দাও
+.select({ name: 1, price: 1, _id: 0 }) // 1 = দেখাও, 0 = বাদ
 ```
 
 ### countDocuments() & distinct()

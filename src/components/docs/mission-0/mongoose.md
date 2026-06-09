@@ -307,47 +307,174 @@ await Product.distinct("category");
 
 > 📖 [mongoosejs.com/docs/validation.html](https://mongoosejs.com/docs/validation.html)
 
+Validation এর কিছু গুরুত্বপূর্ণ নিয়ম:
+
+- Validation **SchemaType** এ define হয়
+- Validation `pre('save')` hook হিসেবে কাজ করে
+- `doc.validate()` দিয়ে manually validation চালানো যায়
+- `undefined` value তে validator চলে না — শুধু `required` চলে
+
+### Built-in Validators
+
 ```javascript
-const userSchema = new Schema({
+const productSchema = new Schema({
+  // String validators
   name: {
     type: String,
-    required: [true, "Name is required"],
-    minlength: [3, "Min 3 characters"],
-    maxlength: [50, "Max 50 characters"],
+    required: true,
+    minlength: 3,
+    maxlength: 100,
+    enum: ["mobile", "laptop", "tablet"],
+    match: /^\S+@\S+\.\S+$/,
+    trim: true,
   },
-  email: {
-    type: String,
-    required: [true, "Email is required"],
-    unique: true,
-    match: [/^\S+@\S+\.\S+$/, "Invalid email"],
-  },
-  age: {
-    type: Number,
-    min: [18, "Must be 18+"],
-    max: [100, "Invalid age"],
-  },
-  role: {
-    type: String,
-    enum: { values: ["user", "admin"], message: "{VALUE} is not valid" },
-    default: "user",
-  },
+
+  // Number validators
   price: {
     type: Number,
-    validate: {
-      validator: function (v) {
-        return v > 0;
-      },
-      message: "Price must be positive!",
+    min: 0,
+    max: 999999,
+    required: true,
+  },
+
+  // Conditional required
+  discount: {
+    type: Number,
+    required: function () {
+      return this.price > 100000; // price বেশি হলে discount must
     },
   },
 });
+```
 
-// Manual validation
+### Custom Error Messages
+
+দুইভাবে লেখা যায়:
+
+```javascript
+const schema = new Schema({
+  // Array syntax
+  eggs: {
+    type: Number,
+    min: [6, "Must be at least 6, got {VALUE}"], // {VALUE} = actual value
+    max: 12,
+  },
+
+  // Object syntax
+  drink: {
+    type: String,
+    enum: {
+      values: ["Coffee", "Tea"],
+      message: "{VALUE} is not supported",
+    },
+  },
+});
+```
+
+### ⚠️ unique — Validator না!
+
+```javascript
+// unique একটা MongoDB index — validator না
+const schema = new Schema({
+  email: { type: String, unique: true },
+});
+
+// duplicate দিলে ValidationError আসবে না
+// আসবে: MongoServerError: duplicate key error (code: 11000)
+```
+
+### Custom Validators
+
+```javascript
+const userSchema = new Schema({
+  phone: {
+    type: String,
+    validate: {
+      validator: function (v) {
+        return /\d{3}-\d{3}-\d{4}/.test(v);
+      },
+      message: (props) => `${props.value} is not a valid phone number!`,
+    },
+    required: [true, "Phone number required"],
+  },
+});
+```
+
+### Async Custom Validators
+
+```javascript
+const schema = new Schema({
+  email: {
+    type: String,
+    validate: {
+      validator: async function (v) {
+        const user = await User.findOne({ email: v });
+        return !user; // already exist করলে false → error
+      },
+      message: "Email already exists!",
+    },
+  },
+});
+```
+
+### Validation Errors
+
+```javascript
 try {
-  await user.validate();
+  await product.save();
+} catch (err) {
+  if (err.name === "ValidationError") {
+    // ValidatorError এর properties:
+    console.log(err.errors["name"].message); // error message
+    console.log(err.errors["name"].path); // field name
+    console.log(err.errors["name"].value); // দেওয়া value
+    console.log(err.errors["name"].kind); // validator type (required, min, max...)
+  }
+}
+```
+
+### Cast Errors
+
+```javascript
+// Wrong type দিলে CastError আসে — validation এর আগে চলে
+const product = new Product({ price: 'not a number' })
+const err = product.validateSync()
+
+err.errors['price'].name      // 'CastError'
+err.errors['price'].message   // 'Cast to Number failed...'
+
+// Custom cast error message
+price: {
+  type: Number,
+  cast: '{VALUE} is not a valid price'
+}
+```
+
+### Manual Validation
+
+```javascript
+// async
+try {
+  await product.validate();
 } catch (err) {
   console.log(err.errors);
 }
+
+// sync
+const err = product.validateSync();
+if (err) console.log(err.errors);
+```
+
+### Update তে Validation চালাও
+
+```javascript
+// default এ update এ validation চলে না
+// runValidators: true দিতে হবে
+await Product.findByIdAndUpdate(
+  id,
+  { $set: { price: -100 } },
+  { runValidators: true }, // ← এটা না দিলে validation চলবে না
+);
 ```
 
 ---
@@ -635,41 +762,98 @@ await product.restore(); // ফিরিয়ে আনো
 
 ## 13. Instance Methods
 
-> 📖 [mongoosejs.com/docs/guide.html#methods](https://mongoosejs.com/docs/guide.html#methods)
+> একটা নির্দিষ্ট **document**-এর উপর কাজ করে।
+> `this` = ওই document।
 
-একটা নির্দিষ্ট **document** এর উপর কাজ করে।
+### Basic Version — Concept বোঝার জন্য
 
-```javascript
+```js
+// define
+todoSchema.methods = {
+  findActive: function () {
+    // this = todo document, কিন্তু এখানে this লাগেনি
+    // তাই mongoose.model() দিয়ে আলাদা করে Model নিতে হয়েছে
+    return mongoose.model("Todo").find({ status: "active" });
+  },
+};
+
+// ব্যবহার
+const todo = new Todo(); // আগে empty document বানাও
+const data = await todo.findActive(); // তারপর method call করো
+```
+
+> ⚠️ শুধু query করার জন্য `new Todo()` করা অপ্রয়োজনীয়।
+> কিন্তু concept বোঝার জন্য এটা দিয়ে শুরু করা ভালো।
+
+---
+
+### Advanced Version — Real Project-এ যেভাবে ব্যবহার হয়
+
+```js
+// define — this দিয়ে document-এর নিজের data access করো
 userSchema.methods.isPasswordMatch = async function (password) {
-  return bcrypt.compare(password, this.password);
+  return bcrypt.compare(password, this.password); // this.password = ওই user-এর password
 };
 
 userSchema.methods.generateToken = function () {
-  return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
+  return jwt.sign(
+    { id: this._id, role: this.role }, // this._id = ওই user-এর id
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" },
+  );
 };
 
 userSchema.methods.toSafeObject = function () {
+  // password বাদ দিয়ে safe data return করো
   return { id: this._id, name: this.name, email: this.email };
 };
 
 // ব্যবহার
-const user = await User.findOne({ email });
+const user = await User.findOne({ email }); // আগে document আনো
 const isMatch = await user.isPasswordMatch("123456");
 const token = user.generateToken();
 const safeUser = user.toSafeObject();
 ```
 
+### Basic vs Advanced পার্থক্য
+
+|                    | Basic                             | Advanced                            |
+| ------------------ | --------------------------------- | ----------------------------------- |
+| **`this` ব্যবহার** | করেনি — `mongoose.model()` লাগেছে | করেছে — `this.password`, `this._id` |
+| **কাজ**            | শুধু data খোঁজা                   | document-এর নিজের data নিয়ে কাজ    |
+| **real project**   | ❌                                | ✅                                  |
+
+> **মূল কথা:** Instance method-এর আসল কাজ হলো `this` দিয়ে
+> ওই **নির্দিষ্ট document-এর data** (password, \_id, role) access করা।
+
 ---
 
 ## 14. Static Methods
 
-> 📖 [mongoosejs.com/docs/guide.html#statics](https://mongoosejs.com/docs/guide.html#statics)
+> **Model level**-এ কাজ করে।
+> `this` = Model (পুরো collection)।
+> `new` লাগে না।
 
-**Model level** এ কাজ করে — নির্দিষ্ট document এর দরকার নেই।
+### Basic Version — Concept বোঝার জন্য
 
-```javascript
+```js
+// define
+todoSchema.statics = {
+  findByJs: function () {
+    return this.find({ title: /js/i }); // this = Todo Model
+  },
+};
+
+// ব্যবহার
+const data = await Todo.findByJs(); // সরাসরি Model-এ call, new লাগেনি
+```
+
+---
+
+### Advanced Version — Real Project-এ যেভাবে ব্যবহার হয়
+
+```js
+// define
 productSchema.statics.findByCategory = function (category) {
   return this.find({ category, isActive: true });
 };
@@ -702,15 +886,44 @@ const expensive = await Product.findMostExpensive(3);
 const result = await Product.paginate({ category: "mobile" }, 1, 5);
 ```
 
+### Basic vs Advanced পার্থক্য
+
+|                  | Basic                  | Advanced                               |
+| ---------------- | ---------------------- | -------------------------------------- |
+| **কাজ**          | শুধু title দিয়ে খোঁজা | category, price, pagination সব         |
+| **`this`**       | `this.find()`          | `this.find()`, `this.countDocuments()` |
+| **real project** | ❌                     | ✅                                     |
+
+> **মূল কথা:** Concept একই — `this` = Model।
+> Advanced-এ শুধু বেশি কাজ করছে।
+
 ---
 
 ## 15. Query Helpers
 
-> 📖 [mongoosejs.com/docs/guide.html#query-helpers](https://mongoosejs.com/docs/guide.html#query-helpers)
+> Query-তে **chainable custom method** যোগ করে।
+> `this` = চলমান query object।
 
-Query তে **chainable custom method** যোগ করো।
+### Basic Version — Concept বোঝার জন্য
 
-```javascript
+```js
+// define
+todoSchema.query = {
+  byLanguage: function (language) {
+    return this.find({ title: new RegExp(language, "i") }); // this = current query
+  },
+};
+
+// ব্যবহার — find() এর পরে chain করো
+const data = await Todo.find().byLanguage("book");
+```
+
+---
+
+### Advanced Version — Real Project-এ যেভাবে ব্যবহার হয়
+
+```js
+// define — অনেক helper একসাথে
 productSchema.query.byCategory = function (category) {
   return this.where({ category });
 };
@@ -727,16 +940,95 @@ productSchema.query.paginate = function (page = 1, limit = 10) {
   return this.skip((page - 1) * limit).limit(limit);
 };
 
-// ব্যবহার — chain করো
+// ব্যবহার — সব একসাথে chain করো
 const products = await Product.find()
   .byCategory("mobile")
   .active()
   .inPriceRange(50000, 150000)
-  .sort({ price: -1 })
+  .sort({ price: -1 }) // mongoose-এর built-in chain
+  .paginate(1, 5); // custom chain
+```
+
+### Basic vs Advanced পার্থক্য
+
+|                             | Basic             | Advanced                                |
+| --------------------------- | ----------------- | --------------------------------------- |
+| **helper সংখ্যা**           | একটা              | অনেকগুলো                                |
+| **chain**                   | একটা মাত্র        | অনেক একসাথে                             |
+| **`.where()` vs `.find()`** | `.find()` ব্যবহার | `.where()` ব্যবহার (chainable-friendly) |
+| **real project**            | ❌                | ✅                                      |
+
+> **মূল কথা:** Concept একই — `this` = query।
+> Advanced-এ অনেক helper একসাথে chain করা যাচ্ছে।
+
+---
+
+## তিনটা পাশাপাশি — Basic
+
+```js
+// instance — document বানিয়ে call
+const todo = new Todo();
+await todo.findActive();
+
+// static — সরাসরি Model-এ call
+await Todo.findByJs();
+
+// query helper — find()-এর পরে chain
+await Todo.find().byLanguage("book");
+```
+
+## তিনটা পাশাপাশি — Advanced
+
+```js
+// instance — document আনো, তারপর call
+const user = await User.findOne({ email });
+await user.isPasswordMatch("123456");
+await user.generateToken();
+
+// static — সরাসরি Model-এ call
+await Product.findByCategory("mobile");
+await Product.paginate({ category: "mobile" }, 1, 5);
+
+// query helper — অনেক কিছু chain
+await Product.find()
+  .byCategory("mobile")
+  .active()
+  .inPriceRange(50000, 150000)
   .paginate(1, 5);
 ```
 
 ---
+
+## গুরুত্বপূর্ণ — Arrow Function চলবে না
+
+```js
+// ❌ WRONG — this = undefined হয়ে যাবে
+userSchema.methods.getToken = () => {
+  return jwt.sign({ id: this._id }, secret);
+};
+
+// ✅ CORRECT — সবসময় regular function লিখো
+userSchema.methods.getToken = function () {
+  return jwt.sign({ id: this._id }, secret);
+};
+```
+
+## Quick Reference
+
+|                     | Call করার উপায়         | `this` কী | কখন ব্যবহার                       |
+| ------------------- | ----------------------- | --------- | --------------------------------- |
+| **Instance Method** | `new Model().method()`  | document  | document-এর নিজের data নিয়ে কাজে |
+| **Static Method**   | `Model.method()`        | Model     | collection-wide query-তে          |
+| **Query Helper**    | `Model.find().method()` | Query     | chain query-তে                    |
+
+---
+
+> Instance, Static, Query Helper — তিনটাতেই `this` লাগে।
+> তাই তিনটাতেই **arrow function দেওয়া যাবে না।**
+
+---
+
+_Ref: [mongoosejs.com/docs/guide.html](https://mongoosejs.com/docs/guide.html)_
 
 ## 16. Virtuals
 

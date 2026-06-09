@@ -13,13 +13,13 @@ export const category: DocCategory = {
       markdownFile: "module-9.md",
       categoryId: "mission-3",
     },
-    // {
-    //   id: "Raw-Node.js-Basic-to-Advanced",
-    //   title: "Raw Node.js Basic to Advanced",
-    //   order: 1,
-    //   markdownFile: "raw-node-js.md",
-    //   categoryId: "mission-3",
-    // },
+    {
+      id: "CRUD-Operations-with-Express-TypeScript-PostgresSQL",
+      title: "CRUD Operations with Express TypeScript PostgresSQL",
+      order: 1,
+      markdownFile: "module-12.md",
+      categoryId: "mission-3",
+    },
     // {
     //   id: "Raw-Node.js-Anatomy",
     //   title: "Raw Node.js Anatomy",
